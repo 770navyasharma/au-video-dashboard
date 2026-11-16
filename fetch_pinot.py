@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from datetime import date, timedelta
 
 import requests
@@ -47,15 +48,19 @@ def pinot_query(sql):
     return data.get("resultTable", {}).get("rows", [])
 
 
-def build_sql(date_str, breakdown):
-    select_parts = [f"{expr} AS {alias}" for expr, alias in breakdown["cdp_cols"]]
-    group_parts = [expr for expr, _ in breakdown["cdp_cols"]]
+def build_sql(dates, breakdown):
+    """
+    Single query covering the whole date window. event_date_ist is added to
+    SELECT + GROUP BY so each row comes back tagged with its date.
+    70-queries → 5-queries optimization.
+    """
+    select_parts = ["event_date_ist"] + [f"{expr} AS {alias}" for expr, alias in breakdown["cdp_cols"]]
+    group_parts = ["event_date_ist"] + [expr for expr, _ in breakdown["cdp_cols"]]
 
     select_clause = ", ".join(select_parts) + ", SUM(time_spent) AS watch_time_seconds"
     group_clause = ", ".join(group_parts)
+    dates_list = ", ".join(f"'{d}'" for d in dates)
 
-    # Video breakdown keeps the video_id tightness filter;
-    # other breakdowns let (not set) rows through as a real bucket.
     extra = ""
     if breakdown["name"] == "video":
         extra = "AND video_id != 'null' AND video_id != '' "
@@ -64,30 +69,31 @@ def build_sql(date_str, breakdown):
         f"SELECT {select_clause} "
         f"FROM events "
         f"WHERE event_type = 'VIDEO_WATCH_TIME' "
-        f"AND event_date_ist = '{date_str}' "
+        f"AND event_date_ist IN ({dates_list}) "
         f"AND platform IN ('android', 'ios') "
         f"AND JSON_EXTRACT_SCALAR(metadata, '$.videoProvider', 'STRING', '') != 'au-native-player' "
         f"{extra}"
         f"GROUP BY {group_clause} "
-        f"LIMIT 100000"
+        f"LIMIT 500000"
     )
 
 
-def fetch_one_day(date_str, breakdown):
-    sql = build_sql(date_str, breakdown)
+def fetch_window(dates, breakdown):
+    sql = build_sql(dates, breakdown)
     rows = pinot_query(sql)
     result = []
     for r in rows:
         wt = int(r[-1] or 0)
         if wt <= 0:
             continue
-        dims = list(r[:-1])
+        date_val = r[0]
+        dims = list(r[1:-1])
         if breakdown["name"] == "video":
             if not dims[0] or not dims[1]:
                 continue
         # Normalize empty-string dims to "(not set)" so GA and CDP match visually
         dims = [v if v else "(not set)" for v in dims]
-        result.append([date_str] + dims + [wt])
+        result.append([date_val] + dims + [wt])
     return result
 
 
@@ -117,21 +123,23 @@ def main():
             for i in range(2)
         ]
 
-    print(f"Pinot fetch window: {dates}\n")
+    print(f"Pinot fetch window: {dates[0]} → {dates[-1]} ({len(dates)} days)\n")
 
+    overall_start = time.time()
     for breakdown in C.BREAKDOWNS:
         print(f"--- Pinot breakdown: {breakdown['name']} -> {breakdown['cdp_tab']} ---")
         header = C.sheet_header(breakdown)
         ws = get_or_create_ws(ss, breakdown["cdp_tab"], header)
 
-        all_rows = []
-        for d in dates:
-            rows = fetch_one_day(d, breakdown)
-            print(f"  {d}: {len(rows)} rows")
-            all_rows.extend(rows)
+        t0 = time.time()
+        rows = fetch_window(dates, breakdown)
+        q_elapsed = time.time() - t0
+        print(f"  Pinot query: {len(rows)} rows in {q_elapsed:.1f}s")
 
-        upsert(ws, set(dates), all_rows)
-        print(f"  ✅ {breakdown['cdp_tab']} updated: {len(all_rows)} rows across {len(dates)} days\n")
+        upsert(ws, set(dates), rows)
+        print(f"  ✅ {breakdown['cdp_tab']} updated: {len(rows)} rows across {len(dates)} days\n")
+
+    print(f"Total Pinot time: {time.time()-overall_start:.1f}s")
 
 
 if __name__ == "__main__":
