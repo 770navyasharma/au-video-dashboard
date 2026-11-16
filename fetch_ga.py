@@ -65,10 +65,14 @@ def fetch_one_day(client, date_str, breakdown):
         and_group=FilterExpressionList(expressions=[event_filter, stream_filter])
     )
 
+    # GA4 event-scoped custom dimensions and custom metrics must be referenced
+    # as `customEvent:<name>` in the Data API, even though the GA4 UI shows them
+    # with the bare name. We keep the bare names in config.py (they're the sheet
+    # header too) and add the prefix only at API-call time.
     req = RunReportRequest(
         property=f"properties/{C.GA_PROPERTY_ID}",
-        dimensions=[Dimension(name=d) for d in breakdown["ga_dims"]],
-        metrics=[Metric(name=C.GA_METRIC_WATCH_TIME)],
+        dimensions=[Dimension(name=f"customEvent:{d}") for d in breakdown["ga_dims"]],
+        metrics=[Metric(name=f"customEvent:{C.GA_METRIC_WATCH_TIME}")],
         date_ranges=[DateRange(start_date=date_str, end_date=date_str)],
         dimension_filter=combined,
         limit=100000,
