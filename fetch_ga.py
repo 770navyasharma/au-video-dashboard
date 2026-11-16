@@ -1,4 +1,4 @@
-"""Fetch GA4 video watch time per-day, write to GA_Daily tab. Fails hard on sampling."""
+"""Fetch GA4 video watch time per-day (video_id + video_title only). Fails on sampling."""
 import os, json, datetime as dt
 import gspread
 from google.oauth2 import service_account
@@ -27,14 +27,14 @@ def sheet_client():
 
 
 def fetch_one_day(client, date_str):
-    """Query GA4 for one date. Returns list of [date, video_id, title, author, watch_time]."""
+    """Query GA4 for one date. Returns list of [date, video_id, title, watch_time].
+    Filters out rows with empty/unset video_id OR empty video_title."""
     req = RunReportRequest(
         property=f"properties/{C.GA_PROPERTY_ID}",
         date_ranges=[DateRange(start_date=date_str, end_date=date_str)],
         dimensions=[
             Dimension(name=f"customEvent:{C.GA_DIM_VIDEO_ID}"),
             Dimension(name=f"customEvent:{C.GA_DIM_VIDEO_TITLE}"),
-            Dimension(name=f"customEvent:{C.GA_DIM_AUTHOR}"),
         ],
         metrics=[Metric(name=f"customEvent:{C.GA_METRIC_WATCH_TIME}")],
         dimension_filter=FilterExpression(filter=Filter(
@@ -45,7 +45,7 @@ def fetch_one_day(client, date_str):
     )
     resp = client.run_report(req)
 
-    # Sampling check — FAIL hard if sampled (Navya's rule: NO sampling allowed)
+    # Sampling check — FAIL hard if sampled
     for sm in (resp.metadata.sampling_metadatas or []):
         if sm.samples_read_count and sm.samples_read_count < sm.sampling_space_size:
             raise RuntimeError(
@@ -55,24 +55,29 @@ def fetch_one_day(client, date_str):
 
     rows = []
     for r in resp.rows:
-        vid = r.dimension_values[0].value or ""
-        title = r.dimension_values[1].value or ""
-        author = r.dimension_values[2].value or ""
+        vid = (r.dimension_values[0].value or "").strip()
+        title = (r.dimension_values[1].value or "").strip()
         try:
             wt = int(float(r.metric_values[0].value or 0))
         except (ValueError, TypeError):
             wt = 0
+
+        # Filter out garbage: empty, "(not set)", or just whitespace
         if not vid or vid == "(not set)":
             continue
-        rows.append([date_str, vid, title, author, wt])
+        if not title or title == "(not set)":
+            continue
+        if wt <= 0:
+            continue
+
+        rows.append([date_str, vid, title, wt])
     return rows
 
 
 def upsert(ws, dates_set, new_rows):
     """Delete rows for given dates, append new rows. Idempotent."""
     all_data = ws.get_all_values()
-    header = ["date", "video_id", "video_title", "author", "watch_time_seconds"]
-    kept = [all_data[0]] if all_data else [header]
+    kept = [all_data[0]] if all_data else [C.SHEET_HEADER]
     for row in all_data[1:]:
         if row and row[0] not in dates_set:
             kept.append(row)
@@ -82,11 +87,8 @@ def upsert(ws, dates_set, new_rows):
 
 
 def main():
-    # Default: last 2 complete days (lag of 2 — day-1 may still be incomplete in GA)
     today = dt.date.today()
     window = [(today - dt.timedelta(days=d)).isoformat() for d in (2, 3)]
-
-    # Backfill mode: override via env (used by manual workflow_dispatch)
     if os.environ.get("BACKFILL_DATES"):
         window = [d.strip() for d in os.environ["BACKFILL_DATES"].split(",") if d.strip()]
 
@@ -97,8 +99,16 @@ def main():
     try:
         ws = sh.worksheet(C.GA_TAB)
     except gspread.WorksheetNotFound:
-        ws = sh.add_worksheet(C.GA_TAB, 10000, 5)
-        ws.append_row(["date", "video_id", "video_title", "author", "watch_time_seconds"])
+        ws = sh.add_worksheet(C.GA_TAB, 10000, 4)
+        ws.append_row(C.SHEET_HEADER)
+
+    # Overwrite the header if sheet already exists with old 5-col schema
+    current_header = ws.row_values(1)
+    if current_header != C.SHEET_HEADER:
+        print(f"Updating header from {current_header} to {C.SHEET_HEADER}")
+        # Clear the whole sheet — old schema is incompatible
+        ws.clear()
+        ws.update(values=[C.SHEET_HEADER], range_name="A1")
 
     all_rows = []
     for d in window:

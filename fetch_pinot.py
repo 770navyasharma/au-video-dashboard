@@ -1,5 +1,5 @@
 """Fetch Pinot video watch time per-day (clean slice: excludes au-native-player).
-Write to CDP_Daily tab."""
+Write video_id + video_title + watch_time to CDP_Daily tab."""
 import os, json, datetime as dt
 import requests
 import gspread
@@ -30,12 +30,11 @@ def pinot_query(sql):
 
 
 def fetch_one_day(date_str):
-    """Clean-slice: native app traffic (au_video + youtube + native), excludes au-native-player."""
+    """Clean slice: app-only traffic (excludes au-native-player web player)."""
     sql = f"""
     SELECT
       video_id,
       JSON_EXTRACT_SCALAR(metadata, '$.videoTitle', 'STRING', '') AS video_title,
-      story_author_name,
       SUM(time_spent) AS watch_time_seconds
     FROM events
     WHERE event_type = 'VIDEO_WATCH_TIME'
@@ -43,33 +42,34 @@ def fetch_one_day(date_str):
       AND video_id != 'null' AND video_id != ''
       AND JSON_EXTRACT_SCALAR(metadata, '$.videoProvider', 'STRING', '') != 'au-native-player'
     GROUP BY video_id,
-             JSON_EXTRACT_SCALAR(metadata, '$.videoTitle', 'STRING', ''),
-             story_author_name
+             JSON_EXTRACT_SCALAR(metadata, '$.videoTitle', 'STRING', '')
     LIMIT 100000
     """
     rows = pinot_query(sql)
     out = []
     for r in rows:
-        vid = r[0] or ""
-        title = r[1] or ""
-        author = r[2] or ""
+        vid = (r[0] or "").strip()
+        title = (r[1] or "").strip()
         try:
-            wt = int(r[3] or 0)
+            wt = int(r[2] or 0)
         except (ValueError, TypeError):
             wt = 0
+
         if not vid or vid == "null":
             continue
-        if author == "null":
-            author = ""
-        out.append([date_str, vid, title, author, wt])
+        if not title or title == "null":
+            continue
+        if wt <= 0:
+            continue
+
+        out.append([date_str, vid, title, wt])
     return out
 
 
 def upsert(ws, dates_set, new_rows):
     """Delete rows for given dates, append new rows. Idempotent."""
     all_data = ws.get_all_values()
-    header = ["date", "video_id", "video_title", "author", "watch_time_seconds"]
-    kept = [all_data[0]] if all_data else [header]
+    kept = [all_data[0]] if all_data else [C.SHEET_HEADER]
     for row in all_data[1:]:
         if row and row[0] not in dates_set:
             kept.append(row)
@@ -81,7 +81,6 @@ def upsert(ws, dates_set, new_rows):
 def main():
     today = dt.date.today()
     window = [(today - dt.timedelta(days=d)).isoformat() for d in (2, 3)]
-
     if os.environ.get("BACKFILL_DATES"):
         window = [d.strip() for d in os.environ["BACKFILL_DATES"].split(",") if d.strip()]
 
@@ -91,8 +90,15 @@ def main():
     try:
         ws = sh.worksheet(C.CDP_TAB)
     except gspread.WorksheetNotFound:
-        ws = sh.add_worksheet(C.CDP_TAB, 10000, 5)
-        ws.append_row(["date", "video_id", "video_title", "author", "watch_time_seconds"])
+        ws = sh.add_worksheet(C.CDP_TAB, 10000, 4)
+        ws.append_row(C.SHEET_HEADER)
+
+    # Overwrite the header if sheet already exists with old schema
+    current_header = ws.row_values(1)
+    if current_header != C.SHEET_HEADER:
+        print(f"Updating header from {current_header} to {C.SHEET_HEADER}")
+        ws.clear()
+        ws.update(values=[C.SHEET_HEADER], range_name="A1")
 
     all_rows = []
     for d in window:
