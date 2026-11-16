@@ -396,7 +396,7 @@ document.getElementById("cdpNext").addEventListener("click", () => { state.cdpPa
 
 (async function(){
   const pLoad = document.getElementById("pLoad"), pUpd = document.getElementById("pUpdated");
-  if(SHEET_ID === "1cnAsORURfIjl69-LUyTyhLP6xVBnkGWp35HBUn4pzGs"){
+  if(!SHEET_ID || SHEET_ID.startsWith("REPLACE_")){
     pLoad.innerHTML = `<b>Setup needed</b> — paste your Google Sheet ID into index.html (the SHEET_ID line in the &lt;script&gt;)`;
     pLoad.className = "pill bad";
     return;
