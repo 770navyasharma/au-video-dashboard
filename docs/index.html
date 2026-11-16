@@ -27,7 +27,7 @@
   body{padding:0 0 90px}
   .wrap{max-width:1180px;margin:0 auto;padding:0 28px}
 
-  header.top{padding:40px 0 28px;margin-bottom:28px;border-bottom:1px solid var(--line)}
+  header.top{padding:40px 0 28px;margin-bottom:18px;border-bottom:1px solid var(--line)}
   .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-3)}
   h1{font-size:34px;font-weight:700;letter-spacing:-.02em;margin:10px 0 4px;color:var(--ink)}
   .sub{color:var(--ink-2);font-size:14px;line-height:1.55;max-width:720px}
@@ -39,17 +39,23 @@
   .meta .pill.bad{border-color:#fecdd3;color:var(--rose);background:#fef2f4}
   .meta .pill.bad b{color:var(--rose)}
 
+  /* big tab switcher */
+  .tabs{display:flex;gap:4px;margin:18px 0 24px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:5px;box-shadow:0 1px 2px rgba(20,16,10,.03);flex-wrap:wrap}
+  .tab{background:transparent;border:0;color:var(--ink-2);font-family:var(--sans);font-size:14px;font-weight:600;padding:12px 22px;border-radius:10px;cursor:pointer;transition:background .15s,color .15s;letter-spacing:.01em}
+  .tab:hover{color:var(--ink);background:var(--card-alt)}
+  .tab.active{background:var(--accent);color:#fff}
+
   .controls{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-bottom:28px;box-shadow:0 1px 2px rgba(20,16,10,.03)}
   .row{display:grid;grid-template-columns:120px 1fr;gap:18px;align-items:center;padding:12px 0;border-bottom:1px dashed var(--line)}
   .row:last-child{border-bottom:0;padding-bottom:4px}
   .row:first-child{padding-top:4px}
+  .row.hidden{display:none}
   .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
   .segs{display:inline-flex;background:var(--card-alt);border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px;flex-wrap:wrap}
   .seg{font-family:var(--mono);font-size:12.5px;padding:7px 14px;border-radius:7px;cursor:pointer;color:var(--ink-2);border:0;background:transparent;font-weight:500;transition:background .12s,color .12s}
   .seg:hover{color:var(--ink)}
   .seg.active{background:var(--accent);color:#fff;font-weight:600}
-  .search{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .search input{background:var(--card);border:1px solid var(--line-2);color:var(--ink);font-family:var(--sans);font-size:14px;padding:10px 14px;border-radius:8px;outline:none;flex:1;min-width:220px;transition:border-color .12s,box-shadow .12s}
+  .search input{background:var(--card);border:1px solid var(--line-2);color:var(--ink);font-family:var(--sans);font-size:14px;padding:10px 14px;border-radius:8px;outline:none;width:100%;transition:border-color .12s,box-shadow .12s}
   .search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
   .cols{display:flex;gap:10px;flex-wrap:wrap}
   .cols label{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-2);background:var(--card-alt);border:1px solid var(--line);padding:7px 12px;border-radius:7px;cursor:pointer;transition:border-color .12s}
@@ -61,7 +67,7 @@
   .date-pick input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
   .date-pick .sep{color:var(--ink-3);font-family:var(--mono);font-size:13px}
 
-  .section-head{display:flex;align-items:baseline;gap:14px;margin:34px 0 14px}
+  .section-head{display:flex;align-items:baseline;gap:14px;margin:30px 0 14px}
   .section-head h2{font-size:20px;font-weight:700;margin:0;letter-spacing:-.01em;color:var(--ink)}
   .section-head .tag{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);border-left:2px solid var(--accent);padding-left:10px}
 
@@ -75,7 +81,7 @@
   .tcard-head .stats b{color:var(--ink);font-weight:600}
 
   .tscroll{overflow-x:auto}
-  table{width:100%;border-collapse:collapse;min-width:720px}
+  table{width:100%;border-collapse:collapse;min-width:640px}
   thead th{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:14px 22px;border-bottom:1px solid var(--line);font-weight:600;background:var(--card);white-space:nowrap}
   thead th.r{text-align:right}
   thead th.sortable{cursor:pointer;user-select:none;transition:color .12s}
@@ -89,6 +95,7 @@
   .wt{font-family:var(--mono);font-size:13.5px;text-align:right;font-weight:600;color:var(--ink);white-space:nowrap}
   .wt.secondary{font-weight:500;color:var(--ink-2)}
   .wt .unit{color:var(--ink-3);font-weight:400;margin-left:3px;font-size:11px}
+  .notset{color:var(--ink-3);font-style:italic}
   .empty{padding:60px 22px;text-align:center;color:var(--ink-3);font-size:13.5px}
   .empty .big{font-size:38px;margin-bottom:10px;display:block;color:var(--line-2)}
 
@@ -106,9 +113,10 @@
     .row{grid-template-columns:1fr;gap:8px}
     .wrap{padding:0 18px}
     h1{font-size:26px}
-    .title{max-width:260px}
+    .title{max-width:220px}
     thead th,tbody td{padding:12px 14px}
     .tcard-head{padding:14px 16px}
+    .tab{padding:10px 14px;font-size:13px}
   }
 </style>
 </head>
@@ -128,6 +136,16 @@
 
 <div class="wrap">
 
+  <!-- TABS -->
+  <nav class="tabs" id="tabBar">
+    <button class="tab active" data-tab="video">Video</button>
+    <button class="tab" data-tab="unit">Unit</button>
+    <button class="tab" data-tab="category">Category</button>
+    <button class="tab" data-tab="city">City</button>
+    <button class="tab" data-tab="state">State</button>
+  </nav>
+
+  <!-- FILTERS -->
   <section class="controls" aria-label="filters">
     <div class="row">
       <span class="lbl">Date Range</span>
@@ -138,11 +156,11 @@
         <button class="seg" data-r="custom">Custom</button>
       </div>
     </div>
-    <div class="row" id="pickRow" style="display:none">
+    <div class="row hidden" id="pickRow">
       <span class="lbl">Pick a day</span>
       <input type="date" id="pickDate">
     </div>
-    <div class="row" id="customRow" style="display:none">
+    <div class="row hidden" id="customRow">
       <span class="lbl">From → to</span>
       <div class="date-pick">
         <input type="date" id="fromDate">
@@ -151,31 +169,26 @@
       </div>
     </div>
     <div class="row">
-      <span class="lbl">Search in</span>
+      <span class="lbl">Search</span>
       <div class="search">
-        <div class="segs" id="searchSegs">
-          <button class="seg active" data-s="title">Title</button>
-          <button class="seg" data-s="video_id">Video ID</button>
-        </div>
         <input id="searchInput" type="text" placeholder="type to filter…" autocomplete="off">
       </div>
     </div>
-    <div class="row">
+    <div class="row" id="colToggleRow">
       <span class="lbl">Columns</span>
       <div class="cols" id="colToggles">
-        <label><input type="checkbox" data-col="title" checked> Video Title</label>
-        <label><input type="checkbox" data-col="video_id" checked> Video ID</label>
-        <label class="locked"><input type="checkbox" checked disabled> Watch Time (always)</label>
+        <!-- rendered per tab -->
       </div>
     </div>
   </section>
 
   <div class="section-head">
     <h2>Watch Time</h2>
-    <span class="tag">Sec · Min · Hr · app-only clean slice</span>
+    <span class="tag" id="sectionTag">Sec · Min · Hr · app-only clean slice</span>
   </div>
 
-  <section class="tcard" id="gaCard">
+  <!-- GA card -->
+  <section class="tcard">
     <div class="tcard-head ga">
       <div class="name"><span class="dot"></span> Google Analytics</div>
       <div class="stats" id="gaStats">—</div>
@@ -188,7 +201,8 @@
     </div>
   </section>
 
-  <section class="tcard" id="cdpCard">
+  <!-- CDP card -->
+  <section class="tcard">
     <div class="tcard-head cdp">
       <div class="name"><span class="dot"></span> CDP · Pinot <span style="color:var(--ink-3);font-weight:400;font-size:12px;margin-left:6px">(app-only clean slice)</span></div>
       <div class="stats" id="cdpStats">—</div>
@@ -203,7 +217,7 @@
 
   <footer>
     <div>Data source: <b>Google Sheet</b> → updated daily by GitHub Actions. Need a backfill or a bug? <a href="https://github.com/770navyasharma/au-video-dashboard/actions" target="_blank">Open the workflow →</a></div>
-    <div style="margin-top:6px">App-only slice = Android + iOS traffic. Web/mweb/desktop are excluded until the <code>au-native-player</code> fixes land. More sections (Video Views, etc.) can be added below Watch Time.</div>
+    <div style="margin-top:6px">App-only slice = Android + iOS traffic. Web/mweb/desktop excluded until <code>au-native-player</code> fixes land. <code>(not set)</code> rows are a real GA / CDP bucket, not missing data.</div>
   </footer>
 
 </div>
@@ -211,22 +225,83 @@
 <script>
 /* ============ config ============ */
 const SHEET_ID = "1cnAsORURfIjI69-LUyTyhLP6xVBnkGWp35HBUn4pzGs";
-const GA_TAB = "GA_Daily";
-const CDP_TAB = "CDP_Daily";
 const PAGE_SIZE = 10;
 
-const state = {
-  gaRaw: [], cdpRaw: [],
-  dateMode: "7",
-  pickDate: null, fromDate: null, toDate: null,
-  searchField: "title",
-  searchText: "",
-  cols: {title:true, video_id:true},
-  gaPage: 1, cdpPage: 1,
-  gaSort: {col:"watch_time_seconds", dir:"desc"},
-  cdpSort: {col:"watch_time_seconds", dir:"desc"},
+/* Each tab's config: sheet tabs to load, dim columns, agg key, toggles */
+const TABS = {
+  video: {
+    label: "Video",
+    gaTab: "GA_Daily",
+    cdpTab: "CDP_Daily",
+    dims: [
+      {field:"video_title", label:"Video Title", cls:"title", sortable:true, toggleable:true, defaultOn:true},
+      {field:"video_id",    label:"Video ID",    cls:"vid",   sortable:false, toggleable:true, defaultOn:true},
+    ],
+    aggKey: r => r.video_id,
+  },
+  unit: {
+    label: "Unit",
+    gaTab: "GA_Unit",
+    cdpTab: "CDP_Unit",
+    dims: [
+      {field:"unit_name", label:"Unit Name", cls:"title", sortable:true, toggleable:false, defaultOn:true},
+    ],
+    aggKey: r => r.unit_name,
+  },
+  category: {
+    label: "Category",
+    gaTab: "GA_Category",
+    cdpTab: "CDP_Category",
+    dims: [
+      {field:"parent_category", label:"Parent Category", cls:"title", sortable:true, toggleable:false, defaultOn:true},
+      {field:"child_category",  label:"Child Category",  cls:"vid",   sortable:false, toggleable:false, defaultOn:true},
+    ],
+    aggKey: r => `${r.parent_category}||${r.child_category}`,
+  },
+  city: {
+    label: "City",
+    gaTab: "GA_City",
+    cdpTab: "CDP_City",
+    dims: [
+      {field:"location_city", label:"City", cls:"title", sortable:true, toggleable:false, defaultOn:true},
+    ],
+    aggKey: r => r.location_city,
+  },
+  state: {
+    label: "State",
+    gaTab: "GA_State",
+    cdpTab: "CDP_State",
+    dims: [
+      {field:"location_state", label:"State", cls:"title", sortable:true, toggleable:false, defaultOn:true},
+    ],
+    aggKey: r => r.location_state,
+  },
 };
 
+/* ============ state ============ */
+const state = {
+  active: "video",
+  data: {}, // {video:{ga:[],cdp:[]}, unit:{ga:[],cdp:[]}, ...}
+  dateMode: "7",
+  pickDate: null, fromDate: null, toDate: null,
+  searchText: "",
+  colsOn: {}, // per-tab: { video: {video_title:true, video_id:true}, ... }
+  page: {},   // per-tab: { video: {ga:1, cdp:1}, ... }
+  sort: {},   // per-tab: { video: {ga:{col,dir}, cdp:{col,dir}}, ... }
+};
+
+/* seed per-tab state defaults */
+Object.keys(TABS).forEach(k => {
+  state.colsOn[k] = {};
+  TABS[k].dims.forEach(d => state.colsOn[k][d.field] = d.defaultOn);
+  state.page[k] = {ga:1, cdp:1};
+  state.sort[k] = {
+    ga:  {col:"watch_time_seconds", dir:"desc"},
+    cdp: {col:"watch_time_seconds", dir:"desc"},
+  };
+});
+
+/* ============ CSV loader via gviz ============ */
 async function loadSheet(tab){
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
   const r = await fetch(url);
@@ -234,83 +309,104 @@ async function loadSheet(tab){
   return parseCSV(await r.text());
 }
 function parseCSV(text){
-  const lines = []; let cur = []; let field = ""; let inQ = false;
+  const lines=[]; let cur=[], field="", inQ=false;
   for(let i=0;i<text.length;i++){
-    const c = text[i], n = text[i+1];
+    const c=text[i], n=text[i+1];
     if(inQ){
-      if(c === '"' && n === '"'){ field += '"'; i++; }
-      else if(c === '"'){ inQ = false; }
-      else field += c;
+      if(c==='"' && n==='"'){ field+='"'; i++; }
+      else if(c==='"'){ inQ=false; }
+      else field+=c;
     }else{
-      if(c === '"') inQ = true;
-      else if(c === ','){ cur.push(field); field = ""; }
-      else if(c === '\n' || c === '\r'){
-        if(field.length || cur.length){ cur.push(field); lines.push(cur); cur = []; field = ""; }
-        if(c === '\r' && n === '\n') i++;
-      }else field += c;
+      if(c==='"') inQ=true;
+      else if(c===','){ cur.push(field); field=""; }
+      else if(c==='\n' || c==='\r'){
+        if(field.length || cur.length){ cur.push(field); lines.push(cur); cur=[]; field=""; }
+        if(c==='\r' && n==='\n') i++;
+      }else field+=c;
     }
   }
   if(field.length || cur.length){ cur.push(field); lines.push(cur); }
   if(!lines.length) return [];
-  const header = lines[0].map(h => h.trim());
-  return lines.slice(1).filter(r => r.length === header.length).map(r => {
-    const o = {};
-    header.forEach((h, i) => o[h] = r[i]);
-    o.watch_time_seconds = parseInt(o.watch_time_seconds || "0", 10) || 0;
+  const header = lines[0].map(h=>h.trim());
+  return lines.slice(1).filter(r=>r.length===header.length).map(r=>{
+    const o={};
+    header.forEach((h,i)=>o[h]=r[i]);
+    o.watch_time_seconds = parseInt(o.watch_time_seconds||"0",10) || 0;
     return o;
-  }).filter(o => o.video_id && o.video_title && o.watch_time_seconds > 0);
+  }).filter(o=>o.watch_time_seconds>0);
 }
 
+/* ============ date filter ============ */
+function allDatesAcrossAll(){
+  const set = new Set();
+  Object.values(state.data).forEach(({ga,cdp}) => {
+    ga.forEach(r => set.add(r.date));
+    cdp.forEach(r => set.add(r.date));
+  });
+  return [...set].sort();
+}
 function activeDates(){
-  const all = Array.from(new Set([...state.gaRaw, ...state.cdpRaw].map(r => r.date))).sort();
+  const all = allDatesAcrossAll();
   if(!all.length) return new Set();
-  if(state.dateMode === "pick" && state.pickDate) return new Set([state.pickDate]);
-  if(state.dateMode === "custom" && state.fromDate && state.toDate){
-    return new Set(all.filter(d => d >= state.fromDate && d <= state.toDate));
+  if(state.dateMode==="pick" && state.pickDate) return new Set([state.pickDate]);
+  if(state.dateMode==="custom" && state.fromDate && state.toDate){
+    return new Set(all.filter(d => d>=state.fromDate && d<=state.toDate));
   }
-  const latest = all[all.length - 1];
-  if(state.dateMode === "1") return new Set([latest]);
-  if(state.dateMode === "7"){
-    const d = new Date(latest + "T00:00:00Z");
-    const cutoff = new Date(d.getTime() - 6 * 86400000).toISOString().slice(0,10);
-    return new Set(all.filter(x => x >= cutoff && x <= latest));
+  const latest = all[all.length-1];
+  if(state.dateMode==="1") return new Set([latest]);
+  if(state.dateMode==="7"){
+    const d = new Date(latest+"T00:00:00Z");
+    const cutoff = new Date(d.getTime()-6*86400000).toISOString().slice(0,10);
+    return new Set(all.filter(x=>x>=cutoff && x<=latest));
   }
   return new Set(all);
 }
 
-function aggregate(raw, dates){
+/* ============ aggregate ============ */
+function aggregate(raw, tabCfg, dates){
   const q = state.searchText.trim().toLowerCase();
   const agg = new Map();
   for(const r of raw){
     if(!dates.has(r.date)) continue;
     if(q){
-      const hay = (state.searchField === "video_id" ? r.video_id : r.video_title).toLowerCase();
+      const hay = tabCfg.dims.map(d => (r[d.field]||"").toLowerCase()).join(" | ");
       if(!hay.includes(q)) continue;
     }
-    const key = r.video_id;
-    if(!agg.has(key)) agg.set(key, {video_id:r.video_id, video_title:r.video_title, watch_time_seconds:0});
+    const key = tabCfg.aggKey(r);
+    if(!agg.has(key)){
+      const base = {watch_time_seconds:0};
+      tabCfg.dims.forEach(d => base[d.field] = r[d.field]);
+      agg.set(key, base);
+    }
     agg.get(key).watch_time_seconds += r.watch_time_seconds;
   }
   return [...agg.values()];
 }
 
+/* ============ util ============ */
 function sortRows(rows, cfg){
-  const dir = cfg.dir === "asc" ? 1 : -1;
-  return rows.sort((a, b) => {
-    const av = a[cfg.col], bv = b[cfg.col];
-    if(typeof av === "number") return (av - bv) * dir;
-    return String(av || "").localeCompare(String(bv || "")) * dir;
+  const dir = cfg.dir==="asc" ? 1 : -1;
+  return rows.sort((a,b) => {
+    const av=a[cfg.col], bv=b[cfg.col];
+    if(typeof av==="number") return (av-bv)*dir;
+    return String(av||"").localeCompare(String(bv||""))*dir;
   });
 }
 function fmt(n){ return n.toLocaleString("en-IN"); }
-function fmtHr(n){ return n.toLocaleString("en-IN", {minimumFractionDigits:1, maximumFractionDigits:1}); }
-function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));}
+function fmtHr(n){ return n.toLocaleString("en-IN",{minimumFractionDigits:1,maximumFractionDigits:1}); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
+function dimCell(v, cls){
+  const isNotSet = (v||"").toString().toLowerCase()==="(not set)" || !v;
+  if(isNotSet) return `<td class="${cls} notset">(not set)</td>`;
+  return `<td class="${cls}" title="${esc(v)}">${esc(v)}</td>`;
+}
 
-function renderTable(containerId, pagerId, infoId, prevId, nextId, statsId, rows, page, sortCfg, setSort, setPage){
+/* ============ render a single table ============ */
+function renderTable(containerId, pagerId, infoId, prevId, nextId, statsId, rows, page, sortCfg, setSort, setPage, tabCfg){
   const container = document.getElementById(containerId);
-  const totalSec = rows.reduce((s, r) => s + r.watch_time_seconds, 0);
-  const totalHr = totalSec / 3600;
-  document.getElementById(statsId).innerHTML = `<b>${fmt(rows.length)}</b> rows · total <b>${fmt(totalSec)}</b> sec · <b>${fmtHr(totalHr)}</b> hr`;
+  const totalSec = rows.reduce((s,r)=>s+r.watch_time_seconds, 0);
+  document.getElementById(statsId).innerHTML =
+    `<b>${fmt(rows.length)}</b> rows · total <b>${fmt(totalSec)}</b> sec · <b>${fmtHr(totalSec/3600)}</b> hr`;
 
   if(!rows.length){
     container.innerHTML = `<div class="empty"><span class="big">∅</span>No matching data for this filter.</div>`;
@@ -318,28 +414,34 @@ function renderTable(containerId, pagerId, infoId, prevId, nextId, statsId, rows
     return;
   }
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(rows.length/PAGE_SIZE));
   const pg = Math.min(Math.max(1, page), totalPages);
-  const slice = rows.slice((pg - 1) * PAGE_SIZE, pg * PAGE_SIZE);
+  const slice = rows.slice((pg-1)*PAGE_SIZE, pg*PAGE_SIZE);
+  const arrow = c => sortCfg.col===c ? `<span class="arrow">${sortCfg.dir==="asc"?"▲":"▼"}</span>` : "";
 
-  const arrow = c => sortCfg.col === c ? `<span class="arrow">${sortCfg.dir === "asc" ? "▲" : "▼"}</span>` : "";
-  const cols = state.cols;
+  const activeDims = tabCfg.dims.filter(d => state.colsOn[state.active][d.field]);
 
   let html = `<table><thead><tr>`;
-  if(cols.title) html += `<th class="sortable" data-sort="video_title">Video Title${arrow("video_title")}</th>`;
-  if(cols.video_id) html += `<th>Video ID</th>`;
+  activeDims.forEach(d => {
+    if(d.sortable){
+      html += `<th class="sortable" data-sort="${d.field}">${d.label}${arrow(d.field)}</th>`;
+    }else{
+      html += `<th>${d.label}</th>`;
+    }
+  });
   html += `<th class="r sortable" data-sort="watch_time_seconds">Seconds${arrow("watch_time_seconds")}</th>`;
   html += `<th class="r">Minutes</th>`;
   html += `<th class="r">Hours</th>`;
   html += `</tr></thead><tbody>`;
 
   for(const r of slice){
-    const sec = r.watch_time_seconds;
-    const min = Math.round(sec / 60);
-    const hr = sec / 3600;
     html += `<tr>`;
-    if(cols.title) html += `<td class="title" title="${esc(r.video_title)}">${esc(r.video_title)}</td>`;
-    if(cols.video_id) html += `<td class="vid">${esc(r.video_id)}</td>`;
+    activeDims.forEach(d => {
+      html += dimCell(r[d.field], d.cls);
+    });
+    const sec = r.watch_time_seconds;
+    const min = Math.round(sec/60);
+    const hr  = sec/3600;
     html += `<td class="wt">${fmt(sec)} <span class="unit">sec</span></td>`;
     html += `<td class="wt secondary">${fmt(min)} <span class="unit">min</span></td>`;
     html += `<td class="wt secondary">${fmtHr(hr)} <span class="unit">hr</span></td>`;
@@ -355,57 +457,91 @@ function renderTable(containerId, pagerId, infoId, prevId, nextId, statsId, rows
 
   container.querySelectorAll("th.sortable").forEach(th => th.addEventListener("click", () => {
     const col = th.dataset.sort;
-    if(sortCfg.col === col) setSort({col, dir: sortCfg.dir === "asc" ? "desc" : "asc"});
-    else setSort({col, dir: col === "watch_time_seconds" ? "desc" : "asc"});
+    if(sortCfg.col===col) setSort({col, dir: sortCfg.dir==="asc"?"desc":"asc"});
+    else setSort({col, dir: col==="watch_time_seconds"?"desc":"asc"});
     setPage(1);
     renderAll();
   }));
 }
 
-function renderAll(){
-  const dates = activeDates();
-  const gaRows = sortRows(aggregate(state.gaRaw, dates), state.gaSort);
-  const cdpRows = sortRows(aggregate(state.cdpRaw, dates), state.cdpSort);
-  renderTable("gaTable","gaPager","gaInfo","gaPrev","gaNext","gaStats",
-    gaRows, state.gaPage, state.gaSort,
-    s => state.gaSort = s, p => state.gaPage = p);
-  renderTable("cdpTable","cdpPager","cdpInfo","cdpPrev","cdpNext","cdpStats",
-    cdpRows, state.cdpPage, state.cdpSort,
-    s => state.cdpSort = s, p => state.cdpPage = p);
+/* ============ render column toggles + section ============ */
+function renderColToggles(){
+  const row = document.getElementById("colToggleRow");
+  const container = document.getElementById("colToggles");
+  const cfg = TABS[state.active];
+  const toggleables = cfg.dims.filter(d => d.toggleable);
+  if(!toggleables.length){
+    row.classList.add("hidden");
+    return;
+  }
+  row.classList.remove("hidden");
+  let html = "";
+  toggleables.forEach(d => {
+    const checked = state.colsOn[state.active][d.field] ? "checked" : "";
+    html += `<label><input type="checkbox" data-col="${d.field}" ${checked}> ${d.label}</label>`;
+  });
+  html += `<label class="locked"><input type="checkbox" checked disabled> Watch Time (always)</label>`;
+  container.innerHTML = html;
+  container.querySelectorAll("input[data-col]").forEach(cb => cb.addEventListener("change", () => {
+    state.colsOn[state.active][cb.dataset.col] = cb.checked;
+    renderAll();
+  }));
 }
+
+function renderAll(){
+  const cfg = TABS[state.active];
+  const d = state.data[state.active] || {ga:[], cdp:[]};
+  const dates = activeDates();
+  const gaRows = sortRows(aggregate(d.ga, cfg, dates), state.sort[state.active].ga);
+  const cdpRows = sortRows(aggregate(d.cdp, cfg, dates), state.sort[state.active].cdp);
+
+  renderTable("gaTable","gaPager","gaInfo","gaPrev","gaNext","gaStats",
+    gaRows, state.page[state.active].ga, state.sort[state.active].ga,
+    s => state.sort[state.active].ga = s,
+    p => state.page[state.active].ga = p,
+    cfg);
+
+  renderTable("cdpTable","cdpPager","cdpInfo","cdpPrev","cdpNext","cdpStats",
+    cdpRows, state.page[state.active].cdp, state.sort[state.active].cdp,
+    s => state.sort[state.active].cdp = s,
+    p => state.page[state.active].cdp = p,
+    cfg);
+}
+
+/* ============ event wiring ============ */
+document.querySelectorAll("#tabBar .tab").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("#tabBar .tab").forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  state.active = b.dataset.tab;
+  renderColToggles();
+  renderAll();
+}));
 
 document.querySelectorAll("#dateSegs .seg").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll("#dateSegs .seg").forEach(x => x.classList.remove("active"));
   b.classList.add("active");
   state.dateMode = b.dataset.r;
-  document.getElementById("pickRow").style.display = state.dateMode === "pick" ? "grid" : "none";
-  document.getElementById("customRow").style.display = state.dateMode === "custom" ? "grid" : "none";
-  state.gaPage = state.cdpPage = 1;
+  document.getElementById("pickRow").classList.toggle("hidden", state.dateMode!=="pick");
+  document.getElementById("customRow").classList.toggle("hidden", state.dateMode!=="custom");
+  Object.keys(TABS).forEach(k => { state.page[k].ga = state.page[k].cdp = 1; });
   renderAll();
 }));
-document.querySelectorAll("#searchSegs .seg").forEach(b => b.addEventListener("click", () => {
-  document.querySelectorAll("#searchSegs .seg").forEach(x => x.classList.remove("active"));
-  b.classList.add("active");
-  state.searchField = b.dataset.s;
-  renderAll();
-}));
+
 document.getElementById("searchInput").addEventListener("input", e => {
   state.searchText = e.target.value;
-  state.gaPage = state.cdpPage = 1;
+  Object.keys(TABS).forEach(k => { state.page[k].ga = state.page[k].cdp = 1; });
   renderAll();
 });
 document.getElementById("pickDate").addEventListener("change", e => { state.pickDate = e.target.value; renderAll(); });
 document.getElementById("fromDate").addEventListener("change", e => { state.fromDate = e.target.value; renderAll(); });
 document.getElementById("toDate").addEventListener("change", e => { state.toDate = e.target.value; renderAll(); });
-document.querySelectorAll("#colToggles input[type=checkbox]:not([disabled])").forEach(cb => cb.addEventListener("change", () => {
-  state.cols[cb.dataset.col] = cb.checked;
-  renderAll();
-}));
-document.getElementById("gaPrev").addEventListener("click", () => { state.gaPage--; renderAll(); });
-document.getElementById("gaNext").addEventListener("click", () => { state.gaPage++; renderAll(); });
-document.getElementById("cdpPrev").addEventListener("click", () => { state.cdpPage--; renderAll(); });
-document.getElementById("cdpNext").addEventListener("click", () => { state.cdpPage++; renderAll(); });
 
+document.getElementById("gaPrev").addEventListener("click", () => { state.page[state.active].ga--; renderAll(); });
+document.getElementById("gaNext").addEventListener("click", () => { state.page[state.active].ga++; renderAll(); });
+document.getElementById("cdpPrev").addEventListener("click", () => { state.page[state.active].cdp--; renderAll(); });
+document.getElementById("cdpNext").addEventListener("click", () => { state.page[state.active].cdp++; renderAll(); });
+
+/* ============ boot ============ */
 (async function(){
   const pLoad = document.getElementById("pLoad"), pUpd = document.getElementById("pUpdated");
   if(!SHEET_ID || SHEET_ID.startsWith("REPLACE_")){
@@ -414,13 +550,28 @@ document.getElementById("cdpNext").addEventListener("click", () => { state.cdpPa
     return;
   }
   try{
-    const [ga, cdp] = await Promise.all([loadSheet(GA_TAB), loadSheet(CDP_TAB)]);
-    state.gaRaw = ga; state.cdpRaw = cdp;
-    const allDates = Array.from(new Set([...ga, ...cdp].map(r => r.date))).sort();
-    const latest = allDates[allDates.length - 1] || "—";
-    pLoad.innerHTML = `Loaded <b>${fmt(ga.length)}</b> GA rows · <b>${fmt(cdp.length)}</b> CDP rows`;
+    // Load all 10 sheets (5 tabs × ga+cdp) in parallel. Missing sheets fail
+    // gracefully — they'll show as empty until the ETL runs the backfill.
+    const jobs = [];
+    Object.entries(TABS).forEach(([k, cfg]) => {
+      jobs.push(
+        Promise.all([
+          loadSheet(cfg.gaTab).catch(err => { console.warn(`${cfg.gaTab}:`, err.message); return []; }),
+          loadSheet(cfg.cdpTab).catch(err => { console.warn(`${cfg.cdpTab}:`, err.message); return []; }),
+        ]).then(([ga, cdp]) => { state.data[k] = {ga, cdp}; })
+      );
+    });
+    await Promise.all(jobs);
+
+    const allDates = allDatesAcrossAll();
+    const latest = allDates[allDates.length-1] || "—";
+    const totalGa = Object.values(state.data).reduce((s,d) => s + d.ga.length, 0);
+    const totalCdp = Object.values(state.data).reduce((s,d) => s + d.cdp.length, 0);
+    pLoad.innerHTML = `Loaded <b>${fmt(totalGa)}</b> GA rows · <b>${fmt(totalCdp)}</b> CDP rows across <b>${Object.keys(TABS).length}</b> breakdowns`;
     pLoad.className = "pill good";
-    pUpd.innerHTML = `Latest date in sheet: <b>${latest}</b>`;
+    pUpd.innerHTML = `Latest date: <b>${latest}</b>`;
+
+    renderColToggles();
     renderAll();
   }catch(err){
     pLoad.innerHTML = `<b>Load failed</b> — ${esc(err.message)}`;
