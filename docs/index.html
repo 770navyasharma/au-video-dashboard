@@ -74,8 +74,9 @@
   .tcard-head .stats{font-family:var(--mono);font-size:12px;color:var(--ink-3)}
   .tcard-head .stats b{color:var(--ink);font-weight:600}
 
-  table{width:100%;border-collapse:collapse}
-  thead th{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:14px 22px;border-bottom:1px solid var(--line);font-weight:600;background:var(--card)}
+  .tscroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:720px}
+  thead th{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:14px 22px;border-bottom:1px solid var(--line);font-weight:600;background:var(--card);white-space:nowrap}
   thead th.r{text-align:right}
   thead th.sortable{cursor:pointer;user-select:none;transition:color .12s}
   thead th.sortable:hover{color:var(--accent)}
@@ -83,9 +84,10 @@
   tbody td{padding:13px 22px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:13.5px;color:var(--ink)}
   tbody tr:last-child td{border-bottom:0}
   tbody tr:hover{background:var(--card-alt)}
-  .title{font-weight:500;max-width:620px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .title{font-weight:500;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .vid{font-family:var(--mono);font-size:12.5px;color:var(--ink-2)}
   .wt{font-family:var(--mono);font-size:13.5px;text-align:right;font-weight:600;color:var(--ink);white-space:nowrap}
+  .wt.secondary{font-weight:500;color:var(--ink-2)}
   .wt .unit{color:var(--ink-3);font-weight:400;margin-left:3px;font-size:11px}
   .empty{padding:60px 22px;text-align:center;color:var(--ink-3);font-size:13.5px}
   .empty .big{font-size:38px;margin-bottom:10px;display:block;color:var(--line-2)}
@@ -170,7 +172,7 @@
 
   <div class="section-head">
     <h2>Watch Time</h2>
-    <span class="tag">Seconds · app-only clean slice</span>
+    <span class="tag">Sec · Min · Hr · app-only clean slice</span>
   </div>
 
   <section class="tcard" id="gaCard">
@@ -178,7 +180,7 @@
       <div class="name"><span class="dot"></span> Google Analytics</div>
       <div class="stats" id="gaStats">—</div>
     </div>
-    <div id="gaTable"></div>
+    <div class="tscroll" id="gaTable"></div>
     <div class="pager" id="gaPager" style="display:none">
       <button id="gaPrev">‹ Prev</button>
       <span class="info" id="gaInfo">Page 1 of 1</span>
@@ -191,7 +193,7 @@
       <div class="name"><span class="dot"></span> CDP · Pinot <span style="color:var(--ink-3);font-weight:400;font-size:12px;margin-left:6px">(app-only clean slice)</span></div>
       <div class="stats" id="cdpStats">—</div>
     </div>
-    <div id="cdpTable"></div>
+    <div class="tscroll" id="cdpTable"></div>
     <div class="pager" id="cdpPager" style="display:none">
       <button id="cdpPrev">‹ Prev</button>
       <span class="info" id="cdpInfo">Page 1 of 1</span>
@@ -207,7 +209,7 @@
 </div>
 
 <script>
-/* ============ config — REPLACE SHEET_ID below ============ */
+/* ============ config ============ */
 const SHEET_ID = "1cnAsORURfIjI69-LUyTyhLP6xVBnkGWp35HBUn4pzGs";
 const GA_TAB = "GA_Daily";
 const CDP_TAB = "CDP_Daily";
@@ -301,12 +303,14 @@ function sortRows(rows, cfg){
   });
 }
 function fmt(n){ return n.toLocaleString("en-IN"); }
+function fmtHr(n){ return n.toLocaleString("en-IN", {minimumFractionDigits:1, maximumFractionDigits:1}); }
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));}
 
 function renderTable(containerId, pagerId, infoId, prevId, nextId, statsId, rows, page, sortCfg, setSort, setPage){
   const container = document.getElementById(containerId);
-  const totalWT = rows.reduce((s, r) => s + r.watch_time_seconds, 0);
-  document.getElementById(statsId).innerHTML = `<b>${fmt(rows.length)}</b> rows · total <b>${fmt(totalWT)}</b> sec`;
+  const totalSec = rows.reduce((s, r) => s + r.watch_time_seconds, 0);
+  const totalHr = totalSec / 3600;
+  document.getElementById(statsId).innerHTML = `<b>${fmt(rows.length)}</b> rows · total <b>${fmt(totalSec)}</b> sec · <b>${fmtHr(totalHr)}</b> hr`;
 
   if(!rows.length){
     container.innerHTML = `<div class="empty"><span class="big">∅</span>No matching data for this filter.</div>`;
@@ -324,14 +328,22 @@ function renderTable(containerId, pagerId, infoId, prevId, nextId, statsId, rows
   let html = `<table><thead><tr>`;
   if(cols.title) html += `<th class="sortable" data-sort="video_title">Video Title${arrow("video_title")}</th>`;
   if(cols.video_id) html += `<th>Video ID</th>`;
-  html += `<th class="r sortable" data-sort="watch_time_seconds">Watch Time (sec)${arrow("watch_time_seconds")}</th>`;
+  html += `<th class="r sortable" data-sort="watch_time_seconds">Seconds${arrow("watch_time_seconds")}</th>`;
+  html += `<th class="r">Minutes</th>`;
+  html += `<th class="r">Hours</th>`;
   html += `</tr></thead><tbody>`;
 
   for(const r of slice){
+    const sec = r.watch_time_seconds;
+    const min = Math.round(sec / 60);
+    const hr = sec / 3600;
     html += `<tr>`;
     if(cols.title) html += `<td class="title" title="${esc(r.video_title)}">${esc(r.video_title)}</td>`;
     if(cols.video_id) html += `<td class="vid">${esc(r.video_id)}</td>`;
-    html += `<td class="wt">${fmt(r.watch_time_seconds)} <span class="unit">sec</span></td></tr>`;
+    html += `<td class="wt">${fmt(sec)} <span class="unit">sec</span></td>`;
+    html += `<td class="wt secondary">${fmt(min)} <span class="unit">min</span></td>`;
+    html += `<td class="wt secondary">${fmtHr(hr)} <span class="unit">hr</span></td>`;
+    html += `</tr>`;
   }
   html += `</tbody></table>`;
   container.innerHTML = html;
