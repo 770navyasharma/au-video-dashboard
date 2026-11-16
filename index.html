@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AU Video Dashboard</title>
+<style>
+  :root{
+    --paper:#f7f5f0;
+    --card:#ffffff;
+    --card-alt:#fbfaf6;
+    --ink:#1a1816;
+    --ink-2:#4a4844;
+    --ink-3:#8a877f;
+    --line:#e4e0d8;
+    --line-2:#d4cfc4;
+    --accent:#c2410c;
+    --accent-soft:#fef3e7;
+    --teal:#0f766e;
+    --teal-soft:#e6f4f2;
+    --rose:#be123c;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  body{padding:0 0 90px}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+
+  header.top{padding:40px 0 28px;margin-bottom:28px;border-bottom:1px solid var(--line)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-3)}
+  h1{font-size:34px;font-weight:700;letter-spacing:-.02em;margin:10px 0 4px;color:var(--ink)}
+  .sub{color:var(--ink-2);font-size:14px;line-height:1.55;max-width:720px}
+  .meta{display:flex;gap:12px;align-items:center;margin-top:14px;flex-wrap:wrap}
+  .meta .pill{font-family:var(--mono);font-size:11px;color:var(--ink-3);background:var(--card);border:1px solid var(--line);padding:5px 10px;border-radius:999px}
+  .meta .pill b{color:var(--ink);font-weight:600}
+  .meta .pill.good{border-color:#bfe3dd;color:var(--teal);background:var(--teal-soft)}
+  .meta .pill.good b{color:var(--teal)}
+  .meta .pill.bad{border-color:#fecdd3;color:var(--rose);background:#fef2f4}
+  .meta .pill.bad b{color:var(--rose)}
+
+  .controls{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-bottom:28px;box-shadow:0 1px 2px rgba(20,16,10,.03)}
+  .row{display:grid;grid-template-columns:120px 1fr;gap:18px;align-items:center;padding:12px 0;border-bottom:1px dashed var(--line)}
+  .row:last-child{border-bottom:0;padding-bottom:4px}
+  .row:first-child{padding-top:4px}
+  .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+  .segs{display:inline-flex;background:var(--card-alt);border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px;flex-wrap:wrap}
+  .seg{font-family:var(--mono);font-size:12.5px;padding:7px 14px;border-radius:7px;cursor:pointer;color:var(--ink-2);border:0;background:transparent;font-weight:500;transition:background .12s,color .12s}
+  .seg:hover{color:var(--ink)}
+  .seg.active{background:var(--accent);color:#fff;font-weight:600}
+  .search{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .search input{background:var(--card);border:1px solid var(--line-2);color:var(--ink);font-family:var(--sans);font-size:14px;padding:10px 14px;border-radius:8px;outline:none;flex:1;min-width:220px;transition:border-color .12s,box-shadow .12s}
+  .search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .cols{display:flex;gap:10px;flex-wrap:wrap}
+  .cols label{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-2);background:var(--card-alt);border:1px solid var(--line);padding:7px 12px;border-radius:7px;cursor:pointer;transition:border-color .12s}
+  .cols label:hover{border-color:var(--line-2)}
+  .cols input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:pointer}
+  .cols label.locked{opacity:.65;cursor:not-allowed}
+  .date-pick{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .date-pick input{background:var(--card);border:1px solid var(--line-2);color:var(--ink);font-family:var(--mono);font-size:13px;padding:8px 12px;border-radius:7px;outline:none}
+  .date-pick input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .date-pick .sep{color:var(--ink-3);font-family:var(--mono);font-size:13px}
+
+  .section-head{display:flex;align-items:baseline;gap:14px;margin:34px 0 14px}
+  .section-head h2{font-size:20px;font-weight:700;margin:0;letter-spacing:-.01em;color:var(--ink)}
+  .section-head .tag{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);border-left:2px solid var(--accent);padding-left:10px}
+
+  .tcard{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:22px;box-shadow:0 1px 2px rgba(20,16,10,.03)}
+  .tcard-head{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--line);background:var(--card-alt);gap:12px;flex-wrap:wrap}
+  .tcard-head .name{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;color:var(--ink)}
+  .tcard-head .name .dot{width:9px;height:9px;border-radius:50%}
+  .tcard-head.ga .dot{background:#4285f4}
+  .tcard-head.cdp .dot{background:var(--accent)}
+  .tcard-head .stats{font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+  .tcard-head .stats b{color:var(--ink);font-weight:600}
+
+  table{width:100%;border-collapse:collapse}
+  thead th{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:14px 22px;border-bottom:1px solid var(--line);font-weight:600;background:var(--card)}
+  thead th.r{text-align:right}
+  thead th.sortable{cursor:pointer;user-select:none;transition:color .12s}
+  thead th.sortable:hover{color:var(--accent)}
+  thead th .arrow{font-size:9px;margin-left:4px;color:var(--accent)}
+  tbody td{padding:13px 22px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:13.5px;color:var(--ink)}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:var(--card-alt)}
+  .title{font-weight:500;max-width:620px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .vid{font-family:var(--mono);font-size:12.5px;color:var(--ink-2)}
+  .wt{font-family:var(--mono);font-size:13.5px;text-align:right;font-weight:600;color:var(--ink);white-space:nowrap}
+  .wt .unit{color:var(--ink-3);font-weight:400;margin-left:3px;font-size:11px}
+  .empty{padding:60px 22px;text-align:center;color:var(--ink-3);font-size:13.5px}
+  .empty .big{font-size:38px;margin-bottom:10px;display:block;color:var(--line-2)}
+
+  .pager{display:flex;align-items:center;justify-content:center;gap:10px;padding:16px;border-top:1px solid var(--line);background:var(--card-alt)}
+  .pager button{background:var(--card);border:1px solid var(--line-2);color:var(--ink);font-family:var(--mono);font-size:12px;padding:7px 14px;border-radius:7px;cursor:pointer;font-weight:500;transition:border-color .12s,color .12s}
+  .pager button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+  .pager button:disabled{opacity:.4;cursor:not-allowed}
+  .pager .info{font-family:var(--mono);font-size:12px;color:var(--ink-3);min-width:110px;text-align:center}
+
+  footer{margin-top:40px;padding-top:22px;border-top:1px solid var(--line);color:var(--ink-3);font-size:12px;line-height:1.7}
+  footer a{color:var(--accent);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+
+  @media (max-width:720px){
+    .row{grid-template-columns:1fr;gap:8px}
+    .wrap{padding:0 18px}
+    h1{font-size:26px}
+    .title{max-width:260px}
+    thead th,tbody td{padding:12px 14px}
+    .tcard-head{padding:14px 16px}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="kicker">Amar Ujala · Reader Revenue</div>
+    <h1>Video Dashboard</h1>
+    <p class="sub">App-only clean slice — Google Analytics vs CDP/Pinot. Numbers refresh daily at 6:00 AM IST from the connected Google Sheet.</p>
+    <div class="meta">
+      <span class="pill" id="pLoad">Loading data…</span>
+      <span class="pill" id="pUpdated">—</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="controls" aria-label="filters">
+    <div class="row">
+      <span class="lbl">Date Range</span>
+      <div class="segs" id="dateSegs">
+        <button class="seg active" data-r="7">Last 7 days</button>
+        <button class="seg" data-r="1">Yesterday</button>
+        <button class="seg" data-r="pick">Daily (pick)</button>
+        <button class="seg" data-r="custom">Custom</button>
+      </div>
+    </div>
+    <div class="row" id="pickRow" style="display:none">
+      <span class="lbl">Pick a day</span>
+      <input type="date" id="pickDate">
+    </div>
+    <div class="row" id="customRow" style="display:none">
+      <span class="lbl">From → to</span>
+      <div class="date-pick">
+        <input type="date" id="fromDate">
+        <span class="sep">→</span>
+        <input type="date" id="toDate">
+      </div>
+    </div>
+    <div class="row">
+      <span class="lbl">Search in</span>
+      <div class="search">
+        <div class="segs" id="searchSegs">
+          <button class="seg active" data-s="title">Title</button>
+          <button class="seg" data-s="video_id">Video ID</button>
+        </div>
+        <input id="searchInput" type="text" placeholder="type to filter…" autocomplete="off">
+      </div>
+    </div>
+    <div class="row">
+      <span class="lbl">Columns</span>
+      <div class="cols" id="colToggles">
+        <label><input type="checkbox" data-col="title" checked> Video Title</label>
+        <label><input type="checkbox" data-col="video_id" checked> Video ID</label>
+        <label class="locked"><input type="checkbox" checked disabled> Watch Time (always)</label>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-head">
+    <h2>Watch Time</h2>
+    <span class="tag">Seconds · app-only clean slice</span>
+  </div>
+
+  <section class="tcard" id="gaCard">
+    <div class="tcard-head ga">
+      <div class="name"><span class="dot"></span> Google Analytics</div>
+      <div class="stats" id="gaStats">—</div>
+    </div>
+    <div id="gaTable"></div>
+    <div class="pager" id="gaPager" style="display:none">
+      <button id="gaPrev">‹ Prev</button>
+      <span class="info" id="gaInfo">Page 1 of 1</span>
+      <button id="gaNext">Next ›</button>
+    </div>
+  </section>
+
+  <section class="tcard" id="cdpCard">
+    <div class="tcard-head cdp">
+      <div class="name"><span class="dot"></span> CDP · Pinot <span style="color:var(--ink-3);font-weight:400;font-size:12px;margin-left:6px">(app-only clean slice)</span></div>
+      <div class="stats" id="cdpStats">—</div>
+    </div>
+    <div id="cdpTable"></div>
+    <div class="pager" id="cdpPager" style="display:none">
+      <button id="cdpPrev">‹ Prev</button>
+      <span class="info" id="cdpInfo">Page 1 of 1</span>
+      <button id="cdpNext">Next ›</button>
+    </div>
+  </section>
+
+  <footer>
+    <div>Data source: <b>Google Sheet</b> → updated daily by GitHub Actions. Need a backfill or a bug? <a href="https://github.com/770navyasharma/au-video-dashboard/actions" target="_blank">Open the workflow →</a></div>
+    <div style="margin-top:6px">App-only slice = Android + iOS traffic. Web/mweb/desktop are excluded until the <code>au-native-player</code> fixes land. More sections (Video Views, etc.) can be added below Watch Time.</div>
+  </footer>
+
+</div>
+
+<script>
+/* ============ config — REPLACE SHEET_ID below ============ */
+const SHEET_ID = "1cnAsORURfIjI69-LUyTyhLP6xVBnkGWp35HBUn4pzGs";
+const GA_TAB = "GA_Daily";
+const CDP_TAB = "CDP_Daily";
+const PAGE_SIZE = 10;
+
+const state = {
+  gaRaw: [], cdpRaw: [],
+  dateMode: "7",
+  pickDate: null, fromDate: null, toDate: null,
+  searchField: "title",
+  searchText: "",
+  cols: {title:true, video_id:true},
+  gaPage: 1, cdpPage: 1,
+  gaSort: {col:"watch_time_seconds", dir:"desc"},
+  cdpSort: {col:"watch_time_seconds", dir:"desc"},
+};
+
+async function loadSheet(tab){
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+  const r = await fetch(url);
+  if(!r.ok) throw new Error(`Failed to load ${tab}: ${r.status}`);
+  return parseCSV(await r.text());
+}
+function parseCSV(text){
+  const lines = []; let cur = []; let field = ""; let inQ = false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i], n = text[i+1];
+    if(inQ){
+      if(c === '"' && n === '"'){ field += '"'; i++; }
+      else if(c === '"'){ inQ = false; }
+      else field += c;
+    }else{
+      if(c === '"') inQ = true;
+      else if(c === ','){ cur.push(field); field = ""; }
+      else if(c === '\n' || c === '\r'){
+        if(field.length || cur.length){ cur.push(field); lines.push(cur); cur = []; field = ""; }
+        if(c === '\r' && n === '\n') i++;
+      }else field += c;
+    }
+  }
+  if(field.length || cur.length){ cur.push(field); lines.push(cur); }
+  if(!lines.length) return [];
+  const header = lines[0].map(h => h.trim());
+  return lines.slice(1).filter(r => r.length === header.length).map(r => {
+    const o = {};
+    header.forEach((h, i) => o[h] = r[i]);
+    o.watch_time_seconds = parseInt(o.watch_time_seconds || "0", 10) || 0;
+    return o;
+  }).filter(o => o.video_id && o.video_title && o.watch_time_seconds > 0);
+}
+
+function activeDates(){
+  const all = Array.from(new Set([...state.gaRaw, ...state.cdpRaw].map(r => r.date))).sort();
+  if(!all.length) return new Set();
+  if(state.dateMode === "pick" && state.pickDate) return new Set([state.pickDate]);
+  if(state.dateMode === "custom" && state.fromDate && state.toDate){
+    return new Set(all.filter(d => d >= state.fromDate && d <= state.toDate));
+  }
+  const latest = all[all.length - 1];
+  if(state.dateMode === "1") return new Set([latest]);
+  if(state.dateMode === "7"){
+    const d = new Date(latest + "T00:00:00Z");
+    const cutoff = new Date(d.getTime() - 6 * 86400000).toISOString().slice(0,10);
+    return new Set(all.filter(x => x >= cutoff && x <= latest));
+  }
+  return new Set(all);
+}
+
+function aggregate(raw, dates){
+  const q = state.searchText.trim().toLowerCase();
+  const agg = new Map();
+  for(const r of raw){
+    if(!dates.has(r.date)) continue;
+    if(q){
+      const hay = (state.searchField === "video_id" ? r.video_id : r.video_title).toLowerCase();
+      if(!hay.includes(q)) continue;
+    }
+    const key = r.video_id;
+    if(!agg.has(key)) agg.set(key, {video_id:r.video_id, video_title:r.video_title, watch_time_seconds:0});
+    agg.get(key).watch_time_seconds += r.watch_time_seconds;
+  }
+  return [...agg.values()];
+}
+
+function sortRows(rows, cfg){
+  const dir = cfg.dir === "asc" ? 1 : -1;
+  return rows.sort((a, b) => {
+    const av = a[cfg.col], bv = b[cfg.col];
+    if(typeof av === "number") return (av - bv) * dir;
+    return String(av || "").localeCompare(String(bv || "")) * dir;
+  });
+}
+function fmt(n){ return n.toLocaleString("en-IN"); }
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));}
+
+function renderTable(containerId, pagerId, infoId, prevId, nextId, statsId, rows, page, sortCfg, setSort, setPage){
+  const container = document.getElementById(containerId);
+  const totalWT = rows.reduce((s, r) => s + r.watch_time_seconds, 0);
+  document.getElementById(statsId).innerHTML = `<b>${fmt(rows.length)}</b> rows · total <b>${fmt(totalWT)}</b> sec`;
+
+  if(!rows.length){
+    container.innerHTML = `<div class="empty"><span class="big">∅</span>No matching data for this filter.</div>`;
+    document.getElementById(pagerId).style.display = "none";
+    return;
+  }
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const pg = Math.min(Math.max(1, page), totalPages);
+  const slice = rows.slice((pg - 1) * PAGE_SIZE, pg * PAGE_SIZE);
+
+  const arrow = c => sortCfg.col === c ? `<span class="arrow">${sortCfg.dir === "asc" ? "▲" : "▼"}</span>` : "";
+  const cols = state.cols;
+
+  let html = `<table><thead><tr>`;
+  if(cols.title) html += `<th class="sortable" data-sort="video_title">Video Title${arrow("video_title")}</th>`;
+  if(cols.video_id) html += `<th>Video ID</th>`;
+  html += `<th class="r sortable" data-sort="watch_time_seconds">Watch Time (sec)${arrow("watch_time_seconds")}</th>`;
+  html += `</tr></thead><tbody>`;
+
+  for(const r of slice){
+    html += `<tr>`;
+    if(cols.title) html += `<td class="title" title="${esc(r.video_title)}">${esc(r.video_title)}</td>`;
+    if(cols.video_id) html += `<td class="vid">${esc(r.video_id)}</td>`;
+    html += `<td class="wt">${fmt(r.watch_time_seconds)} <span class="unit">sec</span></td></tr>`;
+  }
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+
+  document.getElementById(pagerId).style.display = "flex";
+  document.getElementById(infoId).textContent = `Page ${pg} of ${totalPages}`;
+  document.getElementById(prevId).disabled = pg <= 1;
+  document.getElementById(nextId).disabled = pg >= totalPages;
+
+  container.querySelectorAll("th.sortable").forEach(th => th.addEventListener("click", () => {
+    const col = th.dataset.sort;
+    if(sortCfg.col === col) setSort({col, dir: sortCfg.dir === "asc" ? "desc" : "asc"});
+    else setSort({col, dir: col === "watch_time_seconds" ? "desc" : "asc"});
+    setPage(1);
+    renderAll();
+  }));
+}
+
+function renderAll(){
+  const dates = activeDates();
+  const gaRows = sortRows(aggregate(state.gaRaw, dates), state.gaSort);
+  const cdpRows = sortRows(aggregate(state.cdpRaw, dates), state.cdpSort);
+  renderTable("gaTable","gaPager","gaInfo","gaPrev","gaNext","gaStats",
+    gaRows, state.gaPage, state.gaSort,
+    s => state.gaSort = s, p => state.gaPage = p);
+  renderTable("cdpTable","cdpPager","cdpInfo","cdpPrev","cdpNext","cdpStats",
+    cdpRows, state.cdpPage, state.cdpSort,
+    s => state.cdpSort = s, p => state.cdpPage = p);
+}
+
+document.querySelectorAll("#dateSegs .seg").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("#dateSegs .seg").forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  state.dateMode = b.dataset.r;
+  document.getElementById("pickRow").style.display = state.dateMode === "pick" ? "grid" : "none";
+  document.getElementById("customRow").style.display = state.dateMode === "custom" ? "grid" : "none";
+  state.gaPage = state.cdpPage = 1;
+  renderAll();
+}));
+document.querySelectorAll("#searchSegs .seg").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("#searchSegs .seg").forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  state.searchField = b.dataset.s;
+  renderAll();
+}));
+document.getElementById("searchInput").addEventListener("input", e => {
+  state.searchText = e.target.value;
+  state.gaPage = state.cdpPage = 1;
+  renderAll();
+});
+document.getElementById("pickDate").addEventListener("change", e => { state.pickDate = e.target.value; renderAll(); });
+document.getElementById("fromDate").addEventListener("change", e => { state.fromDate = e.target.value; renderAll(); });
+document.getElementById("toDate").addEventListener("change", e => { state.toDate = e.target.value; renderAll(); });
+document.querySelectorAll("#colToggles input[type=checkbox]:not([disabled])").forEach(cb => cb.addEventListener("change", () => {
+  state.cols[cb.dataset.col] = cb.checked;
+  renderAll();
+}));
+document.getElementById("gaPrev").addEventListener("click", () => { state.gaPage--; renderAll(); });
+document.getElementById("gaNext").addEventListener("click", () => { state.gaPage++; renderAll(); });
+document.getElementById("cdpPrev").addEventListener("click", () => { state.cdpPage--; renderAll(); });
+document.getElementById("cdpNext").addEventListener("click", () => { state.cdpPage++; renderAll(); });
+
+(async function(){
+  const pLoad = document.getElementById("pLoad"), pUpd = document.getElementById("pUpdated");
+  if(SHEET_ID === "REPLACE_WITH_YOUR_SHEET_ID"){
+    pLoad.innerHTML = `<b>Setup needed</b> — paste your Google Sheet ID into index.html (the SHEET_ID line in the &lt;script&gt;)`;
+    pLoad.className = "pill bad";
+    return;
+  }
+  try{
+    const [ga, cdp] = await Promise.all([loadSheet(GA_TAB), loadSheet(CDP_TAB)]);
+    state.gaRaw = ga; state.cdpRaw = cdp;
+    const allDates = Array.from(new Set([...ga, ...cdp].map(r => r.date))).sort();
+    const latest = allDates[allDates.length - 1] || "—";
+    pLoad.innerHTML = `Loaded <b>${fmt(ga.length)}</b> GA rows · <b>${fmt(cdp.length)}</b> CDP rows`;
+    pLoad.className = "pill good";
+    pUpd.innerHTML = `Latest date in sheet: <b>${latest}</b>`;
+    renderAll();
+  }catch(err){
+    pLoad.innerHTML = `<b>Load failed</b> — ${esc(err.message)}`;
+    pLoad.className = "pill bad";
+    console.error(err);
+  }
+})();
+</script>
+</body>
+</html>
