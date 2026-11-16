@@ -1,0 +1,4 @@
+gspread==6.1.2
+google-auth==2.33.0
+google-analytics-data==0.18.14
+requests==2.32.3
