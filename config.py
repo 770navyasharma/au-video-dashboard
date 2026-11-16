@@ -11,6 +11,7 @@ GA_DIM_VIDEO_ID = "video_id"
 GA_DIM_VIDEO_TITLE = "video_title"
 GA_METRIC_WATCH_TIME = "watch_time_seconds"
 GA_EVENT_NAME = "video_watch_time"     # lowercase in GA4
+GA_EXCLUDE_STREAM = "Amarujala Web"    # exclude web stream → app-only (matches GA Exploration)
 
 # Sheet tab names
 GA_TAB = "GA_Daily"

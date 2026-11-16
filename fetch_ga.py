@@ -4,7 +4,8 @@ import gspread
 from google.oauth2 import service_account
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.analytics.data_v1beta.types import (
-    RunReportRequest, DateRange, Dimension, Metric, Filter, FilterExpression
+    RunReportRequest, DateRange, Dimension, Metric,
+    Filter, FilterExpression, FilterExpressionList
 )
 import config as C
 
@@ -37,10 +38,19 @@ def fetch_one_day(client, date_str):
             Dimension(name=f"customEvent:{C.GA_DIM_VIDEO_TITLE}"),
         ],
         metrics=[Metric(name=f"customEvent:{C.GA_METRIC_WATCH_TIME}")],
-        dimension_filter=FilterExpression(filter=Filter(
-            field_name="eventName",
-            string_filter=Filter.StringFilter(value=C.GA_EVENT_NAME),
-        )),
+        # AND of 2 filters — matches Navya's GA Exploration exactly:
+        #   1. event_name = "video_watch_time"
+        #   2. stream_name != "Amarujala Web"  (excludes web, keeps app streams only)
+        dimension_filter=FilterExpression(and_group=FilterExpressionList(expressions=[
+            FilterExpression(filter=Filter(
+                field_name="eventName",
+                string_filter=Filter.StringFilter(value=C.GA_EVENT_NAME),
+            )),
+            FilterExpression(not_expression=FilterExpression(filter=Filter(
+                field_name="streamName",
+                string_filter=Filter.StringFilter(value=C.GA_EXCLUDE_STREAM),
+            ))),
+        ])),
         limit=100000,
     )
     resp = client.run_report(req)
