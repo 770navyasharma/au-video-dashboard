@@ -9,9 +9,12 @@ from google.oauth2 import service_account
 import config as C
 
 
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+
+
 def _creds():
     info = json.loads(os.environ["GCP_SERVICE_ACCOUNT_JSON"])
-    return service_account.Credentials.from_service_account_info(info)
+    return service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
 
 
 def get_or_create_ws(ss, tab_name, header):
