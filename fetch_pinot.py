@@ -16,11 +16,14 @@ def sheet_client():
 
 
 def pinot_query(sql):
+    # Server-side 300s timeout (same as Navya sets in the Pinot console).
+    # The broker was timing out on stage 0 at the default 60s on busy days
+    # (e.g. 2026-11-01) with JSON_EXTRACT_SCALAR + GROUP BY on all events.
     r = requests.post(
         f"{C.PINOT_HOST}/sql",
-        json={"sql": sql, "queryOptions": "useMultistageEngine=true"},
+        json={"sql": sql, "queryOptions": "timeoutMs=300000"},
         auth=(C.PINOT_USER, os.environ["PINOT_PASSWORD"]),
-        timeout=180,
+        timeout=320,  # client timeout must be > server timeout
     )
     r.raise_for_status()
     data = r.json()
@@ -30,17 +33,23 @@ def pinot_query(sql):
 
 
 def fetch_one_day(date_str):
-    """Clean slice: app-only traffic (excludes au-native-player web player)."""
+    """App-only clean slice:
+       - platform IN ('android', 'ios')  — strict app-only (top-level column)
+       - videoProvider != 'au-native-player' — exclude buggy web player (defense in depth)
+       - time_spent > 0 — skip zero-duration noise (pushes filter to DB, lighter)
+    Time filter FIRST (per Pinot best practice: event_date_ist is the partition key).
+    """
     sql = f"""
     SELECT
       video_id,
       JSON_EXTRACT_SCALAR(metadata, '$.videoTitle', 'STRING', '') AS video_title,
       SUM(time_spent) AS watch_time_seconds
     FROM events
-    WHERE event_type = 'VIDEO_WATCH_TIME'
-      AND event_date_ist = '{date_str}'
+    WHERE event_date_ist = '{date_str}'
+      AND event_type = 'VIDEO_WATCH_TIME'
+      AND platform IN ('android', 'ios')
+      AND time_spent > 0
       AND video_id != 'null' AND video_id != ''
-      AND JSON_EXTRACT_SCALAR(metadata, '$.videoProvider', 'STRING', '') != 'au-native-player'
     GROUP BY video_id,
              JSON_EXTRACT_SCALAR(metadata, '$.videoTitle', 'STRING', '')
     LIMIT 100000
