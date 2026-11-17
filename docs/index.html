@@ -26,7 +26,6 @@
   html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
   body{padding:0 0 90px}
   .wrap{max-width:1280px;margin:0 auto;padding:0 28px}
-
   header.top{padding:40px 0 28px;margin-bottom:22px;border-bottom:1px solid var(--line)}
   .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-3)}
   h1{font-size:34px;font-weight:700;letter-spacing:-.02em;margin:10px 0 4px;color:var(--ink)}
@@ -38,7 +37,6 @@
   .meta .pill.good b{color:var(--teal)}
   .meta .pill.bad{border-color:#fecdd3;color:var(--rose);background:#fef2f4}
   .meta .pill.bad b{color:var(--rose)}
-
   .controls{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-bottom:28px;box-shadow:0 1px 2px rgba(20,16,10,.03)}
   .row{display:grid;grid-template-columns:140px 1fr;gap:18px;align-items:center;padding:12px 0;border-bottom:1px dashed var(--line)}
   .row:last-child{border-bottom:0;padding-bottom:4px}
@@ -65,13 +63,11 @@
   .date-pick input{background:var(--card);border:1px solid var(--line-2);color:var(--ink);font-family:var(--mono);font-size:13px;padding:8px 12px;border-radius:7px;outline:none}
   .date-pick input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
   .date-pick .sep{color:var(--ink-3);font-family:var(--mono);font-size:13px}
-
   .section-head{display:flex;align-items:baseline;gap:14px;margin:30px 0 14px;flex-wrap:wrap}
   .section-head h2{font-size:20px;font-weight:700;margin:0;letter-spacing:-.01em;color:var(--ink)}
   .section-head .tag{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);border-left:2px solid var(--accent);padding-left:10px}
   .section-head .agg{font-size:13px;color:var(--ink-2);font-style:italic}
   .section-head .agg b{color:var(--accent);font-style:normal;font-weight:600}
-
   .tcard{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:22px;box-shadow:0 1px 2px rgba(20,16,10,.03)}
   .tcard-head{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--line);background:var(--card-alt);gap:12px;flex-wrap:wrap}
   .tcard-head .name{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;color:var(--ink)}
@@ -80,7 +76,6 @@
   .tcard-head.cdp .dot{background:var(--accent)}
   .tcard-head .stats{font-family:var(--mono);font-size:12px;color:var(--ink-3)}
   .tcard-head .stats b{color:var(--ink);font-weight:600}
-
   .tscroll{overflow-x:auto}
   table{width:100%;border-collapse:collapse;min-width:640px}
   thead th{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:14px 20px;border-bottom:1px solid var(--line);font-weight:600;background:var(--card);white-space:nowrap}
@@ -101,18 +96,18 @@
   .notset{color:var(--ink-3);font-style:italic}
   .empty{padding:60px 22px;text-align:center;color:var(--ink-3);font-size:13.5px}
   .empty .big{font-size:38px;margin-bottom:10px;display:block;color:var(--line-2)}
-
   .pager{display:flex;align-items:center;justify-content:center;gap:10px;padding:16px;border-top:1px solid var(--line);background:var(--card-alt)}
   .pager button{background:var(--card);border:1px solid var(--line-2);color:var(--ink);font-family:var(--mono);font-size:12px;padding:7px 14px;border-radius:7px;cursor:pointer;font-weight:500;transition:border-color .12s,color .12s}
   .pager button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
   .pager button:disabled{opacity:.4;cursor:not-allowed}
   .pager .info{font-family:var(--mono);font-size:12px;color:var(--ink-3);min-width:110px;text-align:center}
   .pager select{background:var(--card);border:1px solid var(--line-2);font-family:var(--mono);font-size:12px;padding:5px 9px;border-radius:7px;color:var(--ink);cursor:pointer}
-
+  .diag{background:#fef2f4;border:1px solid #fecdd3;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--rose);line-height:1.55;display:none}
+  .diag.show{display:block}
+  .diag code{background:#fff;padding:1px 6px;border-radius:4px;font-family:var(--mono);font-size:12px;color:var(--rose)}
   footer{margin-top:40px;padding-top:22px;border-top:1px solid var(--line);color:var(--ink-3);font-size:12px;line-height:1.7}
   footer a{color:var(--accent);text-decoration:none}
   footer a:hover{text-decoration:underline}
-
   @media (max-width:720px){
     .row{grid-template-columns:1fr;gap:8px}
     .wrap{padding:0 18px}
@@ -138,6 +133,7 @@
 </header>
 
 <div class="wrap">
+  <div class="diag" id="diag"></div>
 
   <section class="controls" aria-label="filters">
     <div class="row">
@@ -230,13 +226,20 @@
     <div>Data from <b>Google Sheet</b> → GA_All &amp; CDP_All tabs, refreshed daily by GitHub Actions. <a href="https://github.com/770navyasharma/au-video-dashboard/actions" target="_blank">Open workflow →</a></div>
     <div style="margin-top:6px">App-only slice = Android + iOS (<code>au-native-player</code> web excluded). <code>(not set)</code> rows are a real GA / CDP bucket, not missing data. Toggle dims off to roll up across them.</div>
   </footer>
-
 </div>
 
 <script>
 const SHEET_ID = "1cnAsORURfIjI69-LUyTyhLP6xVBnkGWp35HBUn4pzGs";
 
-/* keep in sync with config.py DIMENSIONS — order = default display order */
+/* GID per tab — these are stable sheet-tab IDs (visible in the browser URL
+   when you click a tab, as #gid=XXXXX). Using /export?format=csv&gid=XXX
+   handles large sheets (25K+ rows) reliably, where gviz/tq CSV can truncate. */
+const GID = {
+  ga:  1173222271,   // GA_All
+  cdp: 1543746779,   // CDP_All
+};
+
+/* keep in sync with config.py DIMENSIONS */
 const DIMS = [
   {field:"video_id",         label:"Video ID",        mono:true},
   {field:"video_title",      label:"Video Title",     mono:false},
@@ -262,13 +265,35 @@ const state = {
   },
 };
 
-/* ============ CSV loader ============ */
-async function loadSheet(tab){
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
-  const r = await fetch(url);
-  if(!r.ok) throw new Error(`Failed to load ${tab}: ${r.status}`);
-  return parseCSV(await r.text());
+/* ============ loaders ============ */
+/* Try export URL first (robust for large sheets), fall back to gviz CSV.
+   Returns {rows, source, error}. */
+async function loadSheet(tabName, gid){
+  const urls = [
+    {label:"export",  url:`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`},
+    {label:"gviz",    url:`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`},
+  ];
+  let lastErr = null;
+  for(const {label,url} of urls){
+    try{
+      const r = await fetch(url, {redirect:"follow"});
+      if(!r.ok){ lastErr = `${label}: HTTP ${r.status}`; continue; }
+      const text = await r.text();
+      // Detect HTML (login page / error page) sneaking in as 200
+      if(/^<!?doctype html|^<html|^<\!DOCTYPE/i.test(text.trim().slice(0,100))){
+        lastErr = `${label}: got HTML back (sheet likely not public — check "Anyone with link" sharing)`;
+        continue;
+      }
+      const rows = parseCSV(text);
+      if(rows.length > 0) return {rows, source:label, error:null};
+      lastErr = `${label}: parsed 0 rows (CSV was empty or malformed)`;
+    }catch(e){
+      lastErr = `${label}: ${e.message}`;
+    }
+  }
+  return {rows:[], source:null, error:lastErr};
 }
+
 function parseCSV(text){
   const lines=[]; let cur=[], field="", inQ=false;
   for(let i=0;i<text.length;i++){
@@ -321,16 +346,13 @@ function activeDates(){
   return new Set(all);
 }
 
-/* ============ aggregation ============
-   Group source rows by whichever dims are ON. If no dims on,
-   output is a single grand-total row. */
+/* ============ aggregation ============ */
 function aggregate(raw, activeDims, dates){
   const q = state.searchText.trim().toLowerCase();
   const agg = new Map();
   for(const r of raw){
     if(!dates.has(r.date)) continue;
     if(q){
-      // search only across visible dims
       const hay = activeDims.map(d => (r[d.field]||"").toLowerCase()).join(" | ");
       if(!hay.includes(q)) continue;
     }
@@ -357,54 +379,41 @@ function fmt(n){ return n.toLocaleString("en-IN"); }
 function fmtHr(n){ return n.toLocaleString("en-IN",{minimumFractionDigits:1,maximumFractionDigits:1}); }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
 
-function activeDimList(){
-  return DIMS.filter(d => state.dimsOn[d.field]);
-}
+function activeDimList(){ return DIMS.filter(d => state.dimsOn[d.field]); }
 
-/* ============ render one table ============ */
 function renderTable(cardIds, rows, pageKey, sortCfg, setSort){
   const container = document.getElementById(cardIds.table);
   const pager = document.getElementById(cardIds.pager);
   const activeDims = activeDimList();
-
   const totalSec = rows.reduce((s,r)=>s+r.watch_time_seconds, 0);
   const totalMin = Math.round(totalSec/60);
   const totalHr = totalSec/3600;
   document.getElementById(cardIds.stats).innerHTML =
     `<b>${fmt(rows.length)}</b> row${rows.length===1?"":"s"} · total <b>${fmt(totalMin)}</b> min · <b>${fmtHr(totalHr)}</b> hr`;
-
   if(!rows.length){
     container.innerHTML = `<div class="empty"><span class="big">∅</span>No matching data for this filter.</div>`;
     pager.style.display = "none";
     return;
   }
-
   const size = state.size[pageKey];
   const totalPages = Math.max(1, Math.ceil(rows.length/size));
   const pg = Math.min(Math.max(1, state.page[pageKey]), totalPages);
   state.page[pageKey] = pg;
   const slice = rows.slice((pg-1)*size, pg*size);
-
   const arrow = c => sortCfg.col===c ? `<span class="arrow">${sortCfg.dir==="asc"?"▲":"▼"}</span>` : "";
-
   let html = `<table><thead><tr>`;
-  if(!activeDims.length){
-    html += `<th>Scope</th>`;
-  }else{
-    activeDims.forEach(d => {
-      html += `<th class="sortable" data-sort="${d.field}">${d.label}${arrow(d.field)}</th>`;
-    });
+  if(!activeDims.length){ html += `<th>Scope</th>`; }
+  else{
+    activeDims.forEach(d => { html += `<th class="sortable" data-sort="${d.field}">${d.label}${arrow(d.field)}</th>`; });
   }
   html += `<th class="r sortable" data-sort="watch_time_seconds">Minutes${arrow("watch_time_seconds")}</th>`;
   html += `<th class="r">Hours</th>`;
   html += `</tr></thead><tbody>`;
-
   for(const r of slice){
     const isGrand = !activeDims.length;
     html += `<tr${isGrand?' class="total-row"':''}>`;
-    if(isGrand){
-      html += `<td>Grand total (all app traffic)</td>`;
-    }else{
+    if(isGrand){ html += `<td>Grand total (all app traffic)</td>`; }
+    else{
       activeDims.forEach(d => {
         const v = r[d.field];
         const isNotSet = !v || v.toString().toLowerCase()==="(not set)";
@@ -412,21 +421,17 @@ function renderTable(cardIds, rows, pageKey, sortCfg, setSort){
         html += `<td class="${cls}" title="${esc(v)}">${isNotSet?"(not set)":esc(v)}</td>`;
       });
     }
-    const sec = r.watch_time_seconds;
-    const min = Math.round(sec/60);
-    const hr = sec/3600;
+    const sec = r.watch_time_seconds, min = Math.round(sec/60), hr = sec/3600;
     html += `<td class="wt">${fmt(min)} <span class="unit">min</span></td>`;
     html += `<td class="wt secondary">${fmtHr(hr)} <span class="unit">hr</span></td>`;
     html += `</tr>`;
   }
   html += `</tbody></table>`;
   container.innerHTML = html;
-
   pager.style.display = "flex";
   document.getElementById(cardIds.info).textContent = `Page ${pg} of ${totalPages}`;
   document.getElementById(cardIds.prev).disabled = pg <= 1;
   document.getElementById(cardIds.next).disabled = pg >= totalPages;
-
   container.querySelectorAll("th.sortable").forEach(th => th.addEventListener("click", () => {
     const col = th.dataset.sort;
     if(sortCfg.col===col) setSort({col, dir: sortCfg.dir==="asc"?"desc":"asc"});
@@ -436,7 +441,6 @@ function renderTable(cardIds, rows, pageKey, sortCfg, setSort){
   }));
 }
 
-/* ============ dim toggles UI ============ */
 function renderDimToggles(){
   const el = document.getElementById("dimToggles");
   el.innerHTML = DIMS.map(d => {
@@ -446,7 +450,6 @@ function renderDimToggles(){
   el.querySelectorAll("input[data-dim]").forEach(cb => cb.addEventListener("change", () => {
     state.dimsOn[cb.dataset.dim] = cb.checked;
     state.page.ga = state.page.cdp = 1;
-    // if sort col is a dim that's now off, fall back to watch_time
     ["ga","cdp"].forEach(k => {
       const s = state.sort[k];
       if(s.col!=="watch_time_seconds" && !state.dimsOn[s.col]){
@@ -461,32 +464,22 @@ function renderDimToggles(){
 function updateAggStatus(){
   const active = activeDimList();
   const el = document.getElementById("aggStatus");
-  if(!active.length){
-    el.innerHTML = `· <b>Grand total</b> (no dims selected)`;
-  }else{
-    el.innerHTML = `· aggregated by <b>${active.map(d => d.label).join(", ")}</b>`;
-  }
+  if(!active.length){ el.innerHTML = `· <b>Grand total</b> (no dims selected)`; }
+  else{ el.innerHTML = `· aggregated by <b>${active.map(d => d.label).join(", ")}</b>`; }
 }
 
 function renderAll(){
   updateAggStatus();
   const active = activeDimList();
   const dates = activeDates();
-
   const gaAgg = sortRows(aggregate(state.gaRaw, active, dates), state.sort.ga);
   const cdpAgg = sortRows(aggregate(state.cdpRaw, active, dates), state.sort.cdp);
-
-  renderTable(
-    {table:"gaTable", pager:"gaPager", info:"gaInfo", prev:"gaPrev", next:"gaNext", stats:"gaStats"},
-    gaAgg, "ga", state.sort.ga, s => state.sort.ga = s
-  );
-  renderTable(
-    {table:"cdpTable", pager:"cdpPager", info:"cdpInfo", prev:"cdpPrev", next:"cdpNext", stats:"cdpStats"},
-    cdpAgg, "cdp", state.sort.cdp, s => state.sort.cdp = s
-  );
+  renderTable({table:"gaTable", pager:"gaPager", info:"gaInfo", prev:"gaPrev", next:"gaNext", stats:"gaStats"},
+    gaAgg, "ga", state.sort.ga, s => state.sort.ga = s);
+  renderTable({table:"cdpTable", pager:"cdpPager", info:"cdpInfo", prev:"cdpPrev", next:"cdpNext", stats:"cdpStats"},
+    cdpAgg, "cdp", state.sort.cdp, s => state.sort.cdp = s);
 }
 
-/* ============ event wiring ============ */
 document.querySelectorAll("#dateSegs .seg").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll("#dateSegs .seg").forEach(x => x.classList.remove("active"));
   b.classList.add("active");
@@ -496,16 +489,12 @@ document.querySelectorAll("#dateSegs .seg").forEach(b => b.addEventListener("cli
   state.page.ga = state.page.cdp = 1;
   renderAll();
 }));
-
 document.getElementById("searchInput").addEventListener("input", e => {
-  state.searchText = e.target.value;
-  state.page.ga = state.page.cdp = 1;
-  renderAll();
+  state.searchText = e.target.value; state.page.ga = state.page.cdp = 1; renderAll();
 });
 document.getElementById("pickDate").addEventListener("change", e => { state.pickDate = e.target.value; renderAll(); });
 document.getElementById("fromDate").addEventListener("change", e => { state.fromDate = e.target.value; renderAll(); });
 document.getElementById("toDate").addEventListener("change", e => { state.toDate = e.target.value; renderAll(); });
-
 document.getElementById("gaPrev").addEventListener("click", () => { state.page.ga--; renderAll(); });
 document.getElementById("gaNext").addEventListener("click", () => { state.page.ga++; renderAll(); });
 document.getElementById("cdpPrev").addEventListener("click", () => { state.page.cdp--; renderAll(); });
@@ -530,26 +519,30 @@ document.getElementById("dimVideo").addEventListener("click", () => setDims(["vi
 document.getElementById("dimLocation").addEventListener("click", () => setDims(["location_city","location_state"]));
 document.getElementById("dimCategory").addEventListener("click", () => setDims(["parent_category","child_category"]));
 
-/* ============ boot ============ */
 (async function(){
-  const pLoad = document.getElementById("pLoad"), pUpd = document.getElementById("pUpdated");
-  if(!SHEET_ID || SHEET_ID.startsWith("REPLACE_")){
-    pLoad.innerHTML = `<b>Setup needed</b> — paste your Google Sheet ID into index.html`;
-    pLoad.className = "pill bad";
-    return;
-  }
+  const pLoad = document.getElementById("pLoad"), pUpd = document.getElementById("pUpdated"), diag = document.getElementById("diag");
   try{
-    const [ga, cdp] = await Promise.all([
-      loadSheet("GA_All").catch(e => { console.warn("GA_All:", e.message); return []; }),
-      loadSheet("CDP_All").catch(e => { console.warn("CDP_All:", e.message); return []; }),
+    const [gaResult, cdpResult] = await Promise.all([
+      loadSheet("GA_All", GID.ga),
+      loadSheet("CDP_All", GID.cdp),
     ]);
-    state.gaRaw = ga;
-    state.cdpRaw = cdp;
+    state.gaRaw = gaResult.rows;
+    state.cdpRaw = cdpResult.rows;
+
+    const diagMsgs = [];
+    if(gaResult.error)  diagMsgs.push(`<b>GA_All:</b> ${esc(gaResult.error)}`);
+    if(cdpResult.error) diagMsgs.push(`<b>CDP_All:</b> ${esc(cdpResult.error)}`);
+    if(diagMsgs.length){
+      diag.innerHTML = diagMsgs.join("<br>") +
+        `<br><br>Fix: open the Google Sheet → <b>Share</b> → General access = <code>Anyone with the link</code>, role = <code>Viewer</code>. Then hard refresh (Cmd+Shift+R).`;
+      diag.classList.add("show");
+    }
 
     const dts = allDates();
     const latest = dts[dts.length-1] || "—";
-    pLoad.innerHTML = `Loaded <b>${fmt(ga.length)}</b> GA rows · <b>${fmt(cdp.length)}</b> CDP rows`;
-    pLoad.className = "pill good";
+    const ok = state.gaRaw.length > 0 || state.cdpRaw.length > 0;
+    pLoad.innerHTML = `Loaded <b>${fmt(state.gaRaw.length)}</b> GA rows · <b>${fmt(state.cdpRaw.length)}</b> CDP rows`;
+    pLoad.className = "pill " + (ok ? "good" : "bad");
     pUpd.innerHTML = `Latest date: <b>${latest}</b>`;
 
     renderDimToggles();
