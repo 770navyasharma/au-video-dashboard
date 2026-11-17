@@ -25,13 +25,11 @@ def _creds():
 
 
 def get_or_create_ws(ss, tab_name, header):
-    """Open the sheet tab, or create it with the right header if missing.
-       If the existing header is stale, clear and rewrite."""
     try:
         ws = ss.worksheet(tab_name)
     except gspread.WorksheetNotFound:
         print(f"  Creating new sheet tab: {tab_name}")
-        ws = ss.add_worksheet(title=tab_name, rows=10000, cols=20)
+        ws = ss.add_worksheet(title=tab_name, rows=50000, cols=20)
         ws.append_row(header)
         return ws
     first_row = ws.row_values(1)
@@ -42,8 +40,9 @@ def get_or_create_ws(ss, tab_name, header):
     return ws
 
 
-def fetch_one_day(client, date_str, breakdown):
-    """Run one GA4 report for one day + one breakdown. Returns list of rows."""
+def fetch_one_day(client, date_str):
+    """Pull one day's data at the finest grain (all 7 dims × video_id).
+       GA4 custom dims/metrics need the `customEvent:` prefix in the Data API."""
     event_filter = FilterExpression(
         filter=Filter(
             field_name="eventName",
@@ -65,13 +64,9 @@ def fetch_one_day(client, date_str, breakdown):
         and_group=FilterExpressionList(expressions=[event_filter, stream_filter])
     )
 
-    # GA4 event-scoped custom dimensions and custom metrics must be referenced
-    # as `customEvent:<name>` in the Data API, even though the GA4 UI shows them
-    # with the bare name. We keep the bare names in config.py (they're the sheet
-    # header too) and add the prefix only at API-call time.
     req = RunReportRequest(
         property=f"properties/{C.GA_PROPERTY_ID}",
-        dimensions=[Dimension(name=f"customEvent:{d}") for d in breakdown["ga_dims"]],
+        dimensions=[Dimension(name=f"customEvent:{d['ga_dim']}") for d in C.DIMENSIONS],
         metrics=[Metric(name=f"customEvent:{C.GA_METRIC_WATCH_TIME}")],
         date_ranges=[DateRange(start_date=date_str, end_date=date_str)],
         dimension_filter=combined,
@@ -80,29 +75,33 @@ def fetch_one_day(client, date_str, breakdown):
     resp = client.run_report(req)
 
     if resp.metadata.sampling_metadatas:
+        raise RuntimeError(f"GA sampling detected on {date_str} — refusing sampled data")
+
+    # Hard fail if GA4 says there are more rows than we fetched. We're not paging
+    # (per-day volume should be well under 100K); if it ever happens we want to
+    # know loudly instead of silently losing data.
+    if resp.row_count and resp.row_count > len(resp.rows):
         raise RuntimeError(
-            f"GA sampling detected on {date_str} for breakdown '{breakdown['name']}' — refusing sampled data"
+            f"GA truncation on {date_str}: {resp.row_count} rows available, got {len(resp.rows)}. Reduce dims or add paging."
         )
 
     rows = []
     for r in resp.rows:
-        dim_values = [d.value for d in r.dimension_values]
+        dim_values = [d.value or "" for d in r.dimension_values]
         wt = int(r.metric_values[0].value or 0)
         if wt <= 0:
             continue
-        # Video breakdown: drop empty / (not set) video_id or title (noise).
-        # Other breakdowns: keep "(not set)" rows — it's a real bucket.
-        if breakdown["name"] == "video":
-            if not dim_values[0] or dim_values[0] == "(not set)":
-                continue
-            if not dim_values[1] or dim_values[1] == "(not set)":
-                continue
+        # video_id is always required. Drop rows where it's missing/junk;
+        # keep "(not set)" for other dims — they're a real bucket.
+        if not dim_values[0] or dim_values[0] == "(not set)":
+            continue
+        # Normalize empty strings to "(not set)" for consistency with CDP
+        dim_values = [v if v else "(not set)" for v in dim_values]
         rows.append([date_str] + dim_values + [wt])
     return rows
 
 
 def upsert(ws, dates_set, new_rows):
-    """Keep rows whose date is NOT in dates_set, then add new_rows. Idempotent."""
     existing = ws.get_all_values()
     header = existing[0] if existing else None
     kept = [row for row in existing[1:] if row and row[0] not in dates_set]
@@ -129,21 +128,19 @@ def main():
             for i in range(2)
         ]
 
-    print(f"GA fetch window: {dates}\n")
+    print(f"GA fetch window: {dates[0]} -> {dates[-1]} ({len(dates)} days)")
+    print(f"Dimensions: {[d['ga_dim'] for d in C.DIMENSIONS]}\n")
 
-    for breakdown in C.BREAKDOWNS:
-        print(f"--- GA breakdown: {breakdown['name']} -> {breakdown['ga_tab']} ---")
-        header = C.sheet_header(breakdown)
-        ws = get_or_create_ws(ss, breakdown["ga_tab"], header)
+    ws = get_or_create_ws(ss, C.GA_TAB, C.SHEET_HEADER)
 
-        all_rows = []
-        for d in dates:
-            rows = fetch_one_day(client, d, breakdown)
-            print(f"  {d}: {len(rows)} rows")
-            all_rows.extend(rows)
+    all_rows = []
+    for d in dates:
+        rows = fetch_one_day(client, d)
+        print(f"  {d}: {len(rows)} rows")
+        all_rows.extend(rows)
 
-        upsert(ws, set(dates), all_rows)
-        print(f"  ✅ {breakdown['ga_tab']} updated: {len(all_rows)} rows across {len(dates)} days\n")
+    upsert(ws, set(dates), all_rows)
+    print(f"\n✅ {C.GA_TAB} updated: {len(all_rows)} rows across {len(dates)} days")
 
 
 if __name__ == "__main__":
