@@ -41,7 +41,7 @@ def get_or_create_ws(ss, tab_name, header):
 
 
 def fetch_one_day(client, date_str):
-    """Pull one day's data at the finest grain (all 7 dims × video_id).
+    """Pull one day's data at the finest grain (all 7 dims × video_id × video_url).
        GA4 custom dims/metrics need the `customEvent:` prefix in the Data API."""
     event_filter = FilterExpression(
         filter=Filter(
@@ -64,9 +64,12 @@ def fetch_one_day(client, date_str):
         and_group=FilterExpressionList(expressions=[event_filter, stream_filter])
     )
 
+    # Order: 7 toggleable dims, then video_url. Must match what we write to sheet.
+    all_dim_names = [d["ga_dim"] for d in C.DIMENSIONS] + [C.VIDEO_URL_GA_DIM]
+
     req = RunReportRequest(
         property=f"properties/{C.GA_PROPERTY_ID}",
-        dimensions=[Dimension(name=f"customEvent:{d['ga_dim']}") for d in C.DIMENSIONS],
+        dimensions=[Dimension(name=f"customEvent:{d}") for d in all_dim_names],
         metrics=[Metric(name=f"customEvent:{C.GA_METRIC_WATCH_TIME}")],
         date_ranges=[DateRange(start_date=date_str, end_date=date_str)],
         dimension_filter=combined,
@@ -77,9 +80,6 @@ def fetch_one_day(client, date_str):
     if resp.metadata.sampling_metadatas:
         raise RuntimeError(f"GA sampling detected on {date_str} — refusing sampled data")
 
-    # Hard fail if GA4 says there are more rows than we fetched. We're not paging
-    # (per-day volume should be well under 100K); if it ever happens we want to
-    # know loudly instead of silently losing data.
     if resp.row_count and resp.row_count > len(resp.rows):
         raise RuntimeError(
             f"GA truncation on {date_str}: {resp.row_count} rows available, got {len(resp.rows)}. Reduce dims or add paging."
@@ -91,13 +91,19 @@ def fetch_one_day(client, date_str):
         wt = int(r.metric_values[0].value or 0)
         if wt <= 0:
             continue
-        # video_id is always required. Drop rows where it's missing/junk;
-        # keep "(not set)" for other dims — they're a real bucket.
+        # video_id is first and always required.
         if not dim_values[0] or dim_values[0] == "(not set)":
             continue
-        # Normalize empty strings to "(not set)" for consistency with CDP
-        dim_values = [v if v else "(not set)" for v in dim_values]
-        rows.append([date_str] + dim_values + [wt])
+
+        # Split off the trailing video_url — don't normalize empty url to "(not set)",
+        # it's a signal to the dashboard that there's no link to attach.
+        real_dims = dim_values[: len(C.DIMENSIONS)]
+        video_url = dim_values[len(C.DIMENSIONS)]
+        real_dims = [v if v else "(not set)" for v in real_dims]
+        if video_url == "(not set)":
+            video_url = ""
+
+        rows.append([date_str] + real_dims + [video_url, wt])
     return rows
 
 
@@ -129,7 +135,7 @@ def main():
         ]
 
     print(f"GA fetch window: {dates[0]} -> {dates[-1]} ({len(dates)} days)")
-    print(f"Dimensions: {[d['ga_dim'] for d in C.DIMENSIONS]}\n")
+    print(f"Dimensions: {[d['ga_dim'] for d in C.DIMENSIONS] + [C.VIDEO_URL_GA_DIM]}\n")
 
     ws = get_or_create_ws(ss, C.GA_TAB, C.SHEET_HEADER)
 

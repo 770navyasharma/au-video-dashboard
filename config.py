@@ -8,18 +8,16 @@ GA_EXCLUDE_STREAM = "Amarujala Web"
 PINOT_HOST = "http://46.62.191.123:9000"
 PINOT_USER = "analyst"
 
-# how many days behind "today" to start fetching
 FETCH_LAG_DAYS = 2
 
-# The 7 dimensions we pull per event. The dashboard lets the user toggle
-# which of these to show + aggregate by — client-side re-aggregation drives
-# all the "unit wise / city wise / combined" views, so a single source of
-# truth per side (GA + CDP) is enough.
+# The 7 dimensions the dashboard lets you toggle + aggregate by. Each row in
+# the sheet lives at the finest grain (date × all 7 dims); the dashboard JS
+# re-aggregates client-side whenever a toggle flips.
 #
-#   ga_dim  = GA4 custom-dimension name (bare — fetch_ga adds the
-#             `customEvent:` prefix at API-call time)
-#   cdp_expr = Pinot SQL expression. video_id is a top-level column; the
-#              rest are JSON_EXTRACT_SCALAR'd from the metadata blob.
+#   ga_dim   = GA4 custom-dimension name (bare — fetch_ga adds the
+#              `customEvent:` prefix at API-call time)
+#   cdp_expr = Pinot SQL expression. video_id is a top-level column; rest
+#              are JSON_EXTRACT_SCALAR'd out of the metadata blob.
 DIMENSIONS = [
     {"field": "video_id",        "label": "Video ID",         "ga_dim": "video_id",
      "cdp_expr": "video_id"},
@@ -37,7 +35,19 @@ DIMENSIONS = [
      "cdp_expr": "JSON_EXTRACT_SCALAR(metadata, '$.locationState', 'STRING', '')"},
 ]
 
+# video_url is attached (NOT a toggleable dim). It travels with every row so
+# the CDP side of the dashboard can make video titles clickable. GA truncates
+# custom-dim values at 100 chars so GA's URLs are unreliable — dashboard only
+# uses the CDP-side URL for links.
+VIDEO_URL_FIELD = "video_url"
+VIDEO_URL_GA_DIM = "video_url"
+VIDEO_URL_CDP_EXPR = "JSON_EXTRACT_SCALAR(metadata, '$.videoUrl', 'STRING', '')"
+
 GA_TAB = "GA_All"
 CDP_TAB = "CDP_All"
 
-SHEET_HEADER = ["date"] + [d["field"] for d in DIMENSIONS] + ["watch_time_seconds"]
+SHEET_HEADER = (
+    ["date"]
+    + [d["field"] for d in DIMENSIONS]
+    + [VIDEO_URL_FIELD, "watch_time_seconds"]
+)
