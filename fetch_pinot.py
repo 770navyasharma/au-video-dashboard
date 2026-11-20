@@ -50,18 +50,12 @@ def pinot_query(sql):
 
 def build_sql(dates):
     """One query covering the whole window at the finest grain
-       (date × video_id × 6 metadata-derived dims × video_url)."""
+       (date × video_id × 6 metadata-derived dims). Dashboard re-aggregates."""
     select_parts = ["event_date_ist"]
     for d in C.DIMENSIONS:
         select_parts.append(f"{d['cdp_expr']} AS {d['field']}")
-    # video_url attached last
-    select_parts.append(f"{C.VIDEO_URL_CDP_EXPR} AS {C.VIDEO_URL_FIELD}")
 
-    group_parts = (
-        ["event_date_ist"]
-        + [d["cdp_expr"] for d in C.DIMENSIONS]
-        + [C.VIDEO_URL_CDP_EXPR]
-    )
+    group_parts = ["event_date_ist"] + [d["cdp_expr"] for d in C.DIMENSIONS]
 
     select_clause = ", ".join(select_parts) + ", SUM(time_spent) AS watch_time_seconds"
     group_clause = ", ".join(group_parts)
@@ -89,17 +83,11 @@ def fetch_window(dates):
         if wt <= 0:
             continue
         date_val = r[0]
-        # Columns after date: 7 real dims + video_url, in that order.
-        real_dims = list(r[1 : 1 + len(C.DIMENSIONS)])
-        video_url = r[1 + len(C.DIMENSIONS)] or ""
-
-        if not real_dims[0]:  # video_id missing (belt + braces, WHERE already filters)
+        dims = list(r[1:-1])
+        if not dims[0]:
             continue
-        # Normalize empty-string real dims to "(not set)" for GA parity.
-        # video_url stays as empty string if missing.
-        real_dims = [v if v else "(not set)" for v in real_dims]
-
-        result.append([date_val] + real_dims + [video_url, wt])
+        dims = [v if v else "(not set)" for v in dims]
+        result.append([date_val] + dims + [wt])
     return result
 
 
@@ -130,7 +118,7 @@ def main():
         ]
 
     print(f"Pinot fetch window: {dates[0]} -> {dates[-1]} ({len(dates)} days)")
-    print(f"Dimensions: {[d['field'] for d in C.DIMENSIONS] + [C.VIDEO_URL_FIELD]}\n")
+    print(f"Dimensions: {[d['field'] for d in C.DIMENSIONS]}\n")
 
     ws = get_or_create_ws(ss, C.CDP_TAB, C.SHEET_HEADER)
 
