@@ -90,9 +90,6 @@
   tbody tr.total-row:hover{background:var(--accent-soft)}
   .dimcell{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .dimcell.mono{font-family:var(--mono);font-size:12.5px;color:var(--ink-2)}
-  .dimcell a{color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent);transition:color .12s,border-color .12s}
-  .dimcell a:hover{color:var(--ink);border-bottom-color:var(--ink)}
-  .dimcell a::after{content:" ↗";font-size:10px;color:var(--ink-3);margin-left:2px}
   .wt{font-family:var(--mono);font-size:13.5px;text-align:right;font-weight:600;color:var(--ink);white-space:nowrap}
   .wt.secondary{font-weight:500;color:var(--ink-2)}
   .wt .unit{color:var(--ink-3);font-weight:400;margin-left:3px;font-size:11px}
@@ -127,7 +124,7 @@
   <div class="wrap">
     <div class="kicker">Amar Ujala · Reader Revenue</div>
     <h1>Video Dashboard</h1>
-    <p class="sub">App-only clean slice — Google Analytics vs CDP/Pinot. Toggle dimensions below to slice watch time at any aggregation level. In the CDP table, video titles are clickable (opens the video). Data refreshes daily at 6:00 AM IST.</p>
+    <p class="sub">App-only clean slice — Google Analytics vs CDP/Pinot. Toggle dimensions below to slice watch time at any aggregation level. Data refreshes daily at 6:00 AM IST.</p>
     <div class="meta">
       <span class="pill" id="pLoad">Loading data…</span>
       <span class="pill" id="pUpdated">—</span>
@@ -208,7 +205,7 @@
 
   <section class="tcard">
     <div class="tcard-head cdp">
-      <div class="name"><span class="dot"></span> CDP · Pinot <span style="color:var(--ink-3);font-weight:400;font-size:12px;margin-left:6px">(titles are clickable — opens the video)</span></div>
+      <div class="name"><span class="dot"></span> CDP · Pinot <span style="color:var(--ink-3);font-weight:400;font-size:12px;margin-left:6px">(app-only clean slice)</span></div>
       <div class="stats" id="cdpStats">—</div>
     </div>
     <div class="tscroll" id="cdpTable"></div>
@@ -227,21 +224,21 @@
 
   <footer>
     <div>Data from <b>Google Sheet</b> → GA_All &amp; CDP_All tabs, refreshed daily by GitHub Actions. <a href="https://github.com/770navyasharma/au-video-dashboard/actions" target="_blank">Open workflow →</a></div>
-    <div style="margin-top:6px">App-only slice = Android + iOS (<code>au-native-player</code> web excluded). <code>(not set)</code> rows are a real GA / CDP bucket, not missing data. Video URL comes from CDP only — GA's custom-dim URL is often truncated at 100 chars, so only CDP titles are clickable.</div>
+    <div style="margin-top:6px">App-only slice = Android + iOS (<code>au-native-player</code> web excluded). <code>(not set)</code> rows are a real GA / CDP bucket, not missing data. Toggle dims off to roll up across them.</div>
   </footer>
 </div>
 
 <script>
 const SHEET_ID = "1cnAsORURfIjI69-LUyTyhLP6xVBnkGWp35HBUn4pzGs";
 
-/* GID per tab — stable sheet-tab IDs (visible in browser URL as #gid=XXXXX).
+/* GID per tab — stable sheet-tab IDs (visible in the browser URL as #gid=XXXXX).
    /export?format=csv&gid=XXX handles large sheets reliably where gviz truncates. */
 const GID = {
   ga:  1173222271,   // GA_All
   cdp: 1543746779,   // CDP_All
 };
 
-/* keep in sync with config.py DIMENSIONS — order = default display order */
+/* keep in sync with config.py DIMENSIONS */
 const DIMS = [
   {field:"video_id",         label:"Video ID",        mono:true},
   {field:"video_title",      label:"Video Title",     mono:false},
@@ -251,8 +248,6 @@ const DIMS = [
   {field:"location_city",    label:"Location City",   mono:false},
   {field:"location_state",   label:"Location State",  mono:false},
 ];
-
-const URL_FIELD = "video_url";  // not a toggleable dim — carried for CDP clickable title
 
 const state = {
   gaRaw: [],
@@ -347,12 +342,7 @@ function activeDates(){
   return new Set(all);
 }
 
-/* ============ aggregation ============
-   Attaches video_url from the first-seen source row. Since video_url is
-   1-to-1 with video_id, as long as video_id (or video_title) is in the
-   active dims, each agg row has a consistent URL. When neither is active
-   (e.g. aggregating by city), the URL still attaches but won't be used
-   because no title column is rendered. */
+/* ============ aggregation ============ */
 function aggregate(raw, activeDims, dates){
   const q = state.searchText.trim().toLowerCase();
   const agg = new Map();
@@ -364,7 +354,7 @@ function aggregate(raw, activeDims, dates){
     }
     const key = activeDims.length ? activeDims.map(d => r[d.field]).join("§§") : "__TOTAL__";
     if(!agg.has(key)){
-      const base = {watch_time_seconds:0, _url: r[URL_FIELD] || ""};
+      const base = {watch_time_seconds:0};
       activeDims.forEach(d => base[d.field] = r[d.field]);
       agg.set(key, base);
     }
@@ -387,25 +377,7 @@ function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;",
 
 function activeDimList(){ return DIMS.filter(d => state.dimsOn[d.field]); }
 
-/* Build a dim cell. For CDP's video_title, wrap in <a> when a URL is present. */
-function renderDimCell(d, value, row, source){
-  const isNotSet = !value || value.toString().toLowerCase()==="(not set)";
-  const cls = `dimcell${d.mono?" mono":""}${isNotSet?" notset":""}`;
-  const display = isNotSet ? "(not set)" : esc(value);
-  const url = row._url;
-  const isLinkable =
-    source === "cdp" &&
-    d.field === "video_title" &&
-    !isNotSet &&
-    url &&
-    /^https?:\/\//i.test(url);
-  if(isLinkable){
-    return `<td class="${cls}"><a href="${esc(url)}" target="_blank" rel="noopener noreferrer" title="${esc(value)}">${display}</a></td>`;
-  }
-  return `<td class="${cls}" title="${esc(value)}">${display}</td>`;
-}
-
-function renderTable(cardIds, rows, pageKey, sortCfg, setSort, source){
+function renderTable(cardIds, rows, pageKey, sortCfg, setSort){
   const container = document.getElementById(cardIds.table);
   const pager = document.getElementById(cardIds.pager);
   const activeDims = activeDimList();
@@ -443,7 +415,10 @@ function renderTable(cardIds, rows, pageKey, sortCfg, setSort, source){
       html += `<td>Grand total (all app traffic)</td>`;
     }else{
       activeDims.forEach(d => {
-        html += renderDimCell(d, r[d.field], r, source);
+        const v = r[d.field];
+        const isNotSet = !v || v.toString().toLowerCase()==="(not set)";
+        const cls = `dimcell${d.mono?" mono":""}${isNotSet?" notset":""}`;
+        html += `<td class="${cls}" title="${esc(v)}">${isNotSet?"(not set)":esc(v)}</td>`;
       });
     }
     const sec = r.watch_time_seconds;
@@ -505,11 +480,11 @@ function renderAll(){
   const cdpAgg = sortRows(aggregate(state.cdpRaw, active, dates), state.sort.cdp);
   renderTable(
     {table:"gaTable", pager:"gaPager", info:"gaInfo", prev:"gaPrev", next:"gaNext", stats:"gaStats"},
-    gaAgg, "ga", state.sort.ga, s => state.sort.ga = s, "ga"
+    gaAgg, "ga", state.sort.ga, s => state.sort.ga = s
   );
   renderTable(
     {table:"cdpTable", pager:"cdpPager", info:"cdpInfo", prev:"cdpPrev", next:"cdpNext", stats:"cdpStats"},
-    cdpAgg, "cdp", state.sort.cdp, s => state.sort.cdp = s, "cdp"
+    cdpAgg, "cdp", state.sort.cdp, s => state.sort.cdp = s
   );
 }
 
