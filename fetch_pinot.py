@@ -49,15 +49,31 @@ def pinot_query(sql):
 
 
 def build_sql(dates):
-    """One query covering the whole window at the finest grain
-       (date × video_id × 6 metadata-derived dims). Dashboard re-aggregates."""
+    """One query, finest grain (date × 7 dims). Unique-user count uses
+       user_id for logged-in traffic and falls back to metadata.guestId for
+       non-logged-in — gives us app-wide unique reach across both buckets.
+       HLL keeps the 7-dim-groupby cheap (~1% approximation error)."""
     select_parts = ["event_date_ist"]
     for d in C.DIMENSIONS:
         select_parts.append(f"{d['cdp_expr']} AS {d['field']}")
 
     group_parts = ["event_date_ist"] + [d["cdp_expr"] for d in C.DIMENSIONS]
 
-    select_clause = ", ".join(select_parts) + ", SUM(time_spent) AS watch_time_seconds"
+    # Prefer user_id; fall back to guestId from metadata when user_id is
+    # empty / null (non-logged-in sessions).
+    user_expr = (
+        "CASE "
+        "WHEN user_id IS NOT NULL AND user_id != '' AND user_id != 'null' "
+        "THEN user_id "
+        "ELSE JSON_EXTRACT_SCALAR(metadata, '$.guestId', 'STRING', '') "
+        "END"
+    )
+
+    select_clause = (
+        ", ".join(select_parts)
+        + f", DISTINCTCOUNTHLL({user_expr}) AS unique_users"
+        + ", SUM(time_spent) AS watch_time_seconds"
+    )
     group_clause = ", ".join(group_parts)
     dates_list = ", ".join(f"'{d}'" for d in dates)
 
@@ -78,16 +94,18 @@ def fetch_window(dates):
     sql = build_sql(dates)
     rows = pinot_query(sql)
     result = []
+    # Row shape: [date, dim1..dim7, unique_users, watch_time_seconds]
     for r in rows:
         wt = int(r[-1] or 0)
+        users = int(r[-2] or 0)
         if wt <= 0:
             continue
         date_val = r[0]
-        dims = list(r[1:-1])
+        dims = list(r[1:-2])  # 7 dim values
         if not dims[0]:
             continue
         dims = [v if v else "(not set)" for v in dims]
-        result.append([date_val] + dims + [wt])
+        result.append([date_val] + dims + [users, wt])
     return result
 
 
@@ -118,7 +136,8 @@ def main():
         ]
 
     print(f"Pinot fetch window: {dates[0]} -> {dates[-1]} ({len(dates)} days)")
-    print(f"Dimensions: {[d['field'] for d in C.DIMENSIONS]}\n")
+    print(f"Dimensions: {[d['field'] for d in C.DIMENSIONS]}")
+    print(f"Metrics: unique_users (HLL), watch_time_seconds\n")
 
     ws = get_or_create_ws(ss, C.CDP_TAB, C.SHEET_HEADER)
 

@@ -1,6 +1,7 @@
 # GA4
 GA_PROPERTY_ID = "153697708"
-GA_METRIC_WATCH_TIME = "watch_time_seconds"
+GA_METRIC_WATCH_TIME = "watch_time_seconds"      # custom event-scoped metric
+GA_METRIC_USERS = "totalUsers"                   # built-in GA4 metric (no customEvent: prefix)
 GA_EVENT_NAME = "video_watch_time"
 GA_EXCLUDE_STREAM = "Amarujala Web"
 
@@ -38,4 +39,10 @@ DIMENSIONS = [
 GA_TAB = "GA_All"
 CDP_TAB = "CDP_All"
 
-SHEET_HEADER = ["date"] + [d["field"] for d in DIMENSIONS] + ["watch_time_seconds"]
+# unique_users comes BEFORE watch_time_seconds in the sheet so the metric
+# is always the last column (dashboard assumes last col = watch_time).
+SHEET_HEADER = (
+    ["date"]
+    + [d["field"] for d in DIMENSIONS]
+    + ["unique_users", "watch_time_seconds"]
+)

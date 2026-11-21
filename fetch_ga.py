@@ -41,8 +41,8 @@ def get_or_create_ws(ss, tab_name, header):
 
 
 def fetch_one_day(client, date_str):
-    """Pull one day's data at the finest grain (all 7 dims × video_id).
-       GA4 custom dims/metrics need the `customEvent:` prefix in the Data API."""
+    """Pull one day's data at finest grain: 7 dims × video_id, with
+       (totalUsers, watch_time_seconds) as the two metrics."""
     event_filter = FilterExpression(
         filter=Filter(
             field_name="eventName",
@@ -64,10 +64,15 @@ def fetch_one_day(client, date_str):
         and_group=FilterExpressionList(expressions=[event_filter, stream_filter])
     )
 
+    # totalUsers is BUILT-IN, no `customEvent:` prefix.
+    # watch_time_seconds is a custom event metric, needs the prefix.
     req = RunReportRequest(
         property=f"properties/{C.GA_PROPERTY_ID}",
         dimensions=[Dimension(name=f"customEvent:{d['ga_dim']}") for d in C.DIMENSIONS],
-        metrics=[Metric(name=f"customEvent:{C.GA_METRIC_WATCH_TIME}")],
+        metrics=[
+            Metric(name=C.GA_METRIC_USERS),
+            Metric(name=f"customEvent:{C.GA_METRIC_WATCH_TIME}"),
+        ],
         date_ranges=[DateRange(start_date=date_str, end_date=date_str)],
         dimension_filter=combined,
         limit=100000,
@@ -85,13 +90,14 @@ def fetch_one_day(client, date_str):
     rows = []
     for r in resp.rows:
         dim_values = [d.value or "" for d in r.dimension_values]
-        wt = int(r.metric_values[0].value or 0)
+        users = int(r.metric_values[0].value or 0)
+        wt = int(r.metric_values[1].value or 0)
         if wt <= 0:
             continue
         if not dim_values[0] or dim_values[0] == "(not set)":
             continue
         dim_values = [v if v else "(not set)" for v in dim_values]
-        rows.append([date_str] + dim_values + [wt])
+        rows.append([date_str] + dim_values + [users, wt])
     return rows
 
 
@@ -123,7 +129,8 @@ def main():
         ]
 
     print(f"GA fetch window: {dates[0]} -> {dates[-1]} ({len(dates)} days)")
-    print(f"Dimensions: {[d['ga_dim'] for d in C.DIMENSIONS]}\n")
+    print(f"Dimensions: {[d['ga_dim'] for d in C.DIMENSIONS]}")
+    print(f"Metrics: [{C.GA_METRIC_USERS}, {C.GA_METRIC_WATCH_TIME}]\n")
 
     ws = get_or_create_ws(ss, C.GA_TAB, C.SHEET_HEADER)
 
